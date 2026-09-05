@@ -109,7 +109,7 @@ One row per meal slot per day.
 - `status`: planned, cooked, skipped, swapped
 - `notes` (what came back uneaten in the snack box)
 
-The `school_snackbox` slot exists only on school days (Mon–Fri, honouring a school-holiday calendar).
+The `school_snackbox` slot exists only on school days. Currently that is every weekday with no holiday calendar; the `school_calendar` table is there if that changes.
 
 ### 3.8 Snack box builder
 A template for the daughter's school box, driven by component slots rather than recipes:
@@ -307,8 +307,8 @@ Row-level security: every table filtered by `household_id = auth.jwt()->>'househ
 Assumptions made so the build can start:
 
 - Two adult users on Android or iPhone; the app is installed from the browser, not the app stores.
-- Currency is ZAR; shops are the usual South African set (Woolworths, Checkers, Pick n Pay, Spar, Makro for bulk) and are editable.
-- The school follows a term calendar we can type in once a year.
+- Currency is ZAR; shops are Woolworths, Checkers, Spar and Everfresh, and are editable.
+- School is every weekday with no term breaks to model.
 - Water means bulk drinking water or tank refills tracked as a cycle item; if it is a municipal utility instead, it simply is not an item.
 - Claude API usage will be small (a few dozen calls a week) and is billed to Kevin's account.
 
@@ -318,6 +318,6 @@ Decisions that would change the build, with the default I will take if you say n
 |---|---|---|
 | Backend | Supabase | Zero-backend single file (no sync) |
 | Message intake | In-app text box and dictation | Also a WhatsApp or Telegram bot forwarding to the parse function |
-| Farm produce | Tracked as `produced` events | Ignore; treat everything as bought |
+| Farm produce | Eggs and honey tracked as `produced` events | Ignore; treat everything as bought |
 | Notifications | In-app badges plus a Sunday and pre-trip push notification | Email digest |
 | Recipe discovery | Paste-a-link only | Claude suggests new Ideas weekly from tags you like |

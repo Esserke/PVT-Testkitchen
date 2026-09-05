@@ -8,12 +8,12 @@ Companion to `DESIGN.md`. Five phases, each ending with something the household 
 
 Goal: an empty app that installs on both phones and syncs a hello-world row.
 
-- [ ] Scaffold Vite + Svelte + TypeScript with `vite-plugin-pwa`; app shell with the five tabs
-- [ ] Create the Supabase project; apply the schema from `DESIGN.md §10` via `supabase/migrations/`
-- [ ] Row-level security by `household_id`; two users via magic link; one household row
-- [ ] Dexie schema mirroring the tables; a `sync.ts` that pushes queued local writes and pulls changes
-- [ ] GitHub Actions: build and deploy to GitHub Pages on push to `main`
-- [ ] `.env.example` for the Supabase URL and anon key; no secrets in the repo
+- [x] Scaffold Vite + Svelte + TypeScript with `vite-plugin-pwa`; app shell with the five tabs
+- [x] Create the Supabase project; apply the schema from `DESIGN.md §10` via `supabase/migrations/`
+- [x] Row-level security by `household_id`; two users via magic link; one household row
+- [x] Dexie schema mirroring the tables; a `sync.ts` that pushes queued local writes and pulls changes
+- [x] GitHub Actions: build and deploy to GitHub Pages on push to `main`
+- [x] `.env.example` for the Supabase URL and anon key; no secrets in the repo
 
 Done when: both phones show the same test item after one is added offline and comes back online.
 
@@ -23,14 +23,14 @@ Done when: both phones show the same test item after one is added offline and co
 
 Goal: the shelf never surprises us. Manual only, no AI yet.
 
-- [ ] Seed the item catalogue from a CSV of what you actually keep (`data/items.csv`); a script imports it
-- [ ] Stock tab: items by location; stock, par level, days-remaining placeholder; low filter
-- [ ] Item detail: edit fields; event history list
-- [ ] Today tab: finished-tap grid of the 20 most-touched items; long-press = low; undo toast
-- [ ] `count` / `level` quick set for an item (full, half, low, out for level-tracked items)
-- [ ] Shop tab v1: list auto-populated by "below par"; manual add; tick = `bought` event with optional price
-- [ ] Trips: create the next trip with a date; the list belongs to a trip
-- [ ] Capture inbox skeleton: a text box that stores raw text for later parsing (no AI yet)
+- [x] Seed the item catalogue from a CSV of what you actually keep (`data/items.csv`); a script imports it
+- [x] Stock tab: items by location; stock, par level, days-remaining placeholder; low filter
+- [x] Item detail: edit fields; event history list
+- [x] Today tab: finished-tap grid of the 20 most-touched items; long-press = low; undo toast
+- [x] `count` / `level` quick set for an item (full, half, low, out for level-tracked items)
+- [x] Shop tab v1: list auto-populated by "below par"; manual add; tick = `bought` event with optional price
+- [x] Trips: create the next trip with a date; the list belongs to a trip
+- [x] Capture inbox skeleton: a text box that stores raw text for later parsing (no AI yet)
 
 Done when: your wife has used the finished tap for a week and the list for a real town trip without opening a notes app.
 
@@ -43,7 +43,7 @@ Goal: Sunday planning in 15 minutes; the list writes itself from the plan.
 - [ ] Recipes tab: create and edit recipes; ingredients pick from the catalogue or free text; tags; ratings; daughter verdict
 - [ ] Ideas list: title, link, why; promote to recipe; drop
 - [ ] Plan tab: 7 × 5 week grid; tap a slot to pick a recipe, an idea, or type free text; copy last week
-- [ ] School calendar: term dates; `school_snackbox` slot only shows on school days
+- [ ] School days: every weekday, no term calendar (Kevin, 2026-09-05); `school_snackbox` shows Mon–Fri. Term calendar stays optional for later
 - [ ] Snack box builder: component slots, item pools, no-repeat rule, school rules; "what came back" logging
 - [ ] "Cooked" on a meal → `used` events for its ingredients scaled to servings; recipe stats update
 - [ ] Shopping list v2: lines from plan ingredients minus current stock, with `reason`; grouped by shop; merged with below-par lines

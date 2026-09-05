@@ -117,6 +117,7 @@ export interface ListLine extends Synced {
   shop: string | null
   checked: boolean
   price_paid_zar: number | null
+  event_id: string | null
 }
 
 export interface SchoolTerm extends Synced {

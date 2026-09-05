@@ -168,6 +168,7 @@ create table if not exists list_line (
   shop text,
   checked boolean not null default false,
   price_paid_zar numeric,
+  event_id uuid references stock_event(id) on delete set null,
   updated_at timestamptz not null default now(),
   deleted boolean not null default false
 );

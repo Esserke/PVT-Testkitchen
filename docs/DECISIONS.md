@@ -9,3 +9,15 @@
 - **Routing**: hash routes, so GitHub Pages needs no rewrite rules.
 - **Starter catalogue**: `app/src/data/items.csv`, 124 items drafted from nine kitchen photos (fridge, freezer drawers, chest freezer, under-sink cupboard, two pantry cupboards, water store, drinks fridge). Par levels are first guesses to be corrected in use. New locations added: chest freezer, drinks fridge, under sink.
 - **Not in Phase 0**: stock events, shopping list, any Claude calls. Those are Phase 1 and Phase 3.
+
+## 2026-09-05 — Answers from Kevin, and Phase 1
+
+- **School**: every weekday, no holidays to model. The snack box slot appears Mon–Fri; the school calendar table stays in the schema but is unused until needed.
+- **Shops**: Woolworths, Checkers, Spar, Everfresh. Fresh produce defaults to Everfresh in the catalogue; bulk defaults moved from Makro to Checkers.
+- **Farm produce**: eggs and honey are `source = farm`. The quick sheet offers "Collected" for them, which writes a `produced` event.
+- **Stock derivation**: the latest `count` (or `finished`, which means zero) fixes an absolute level; `bought`/`produced` add, `used`/`wasted` subtract, `adjust` is signed. Stock never goes below zero. Level items store fractions (1, 0.5, 0.25, 0) as `count` events.
+- **Below par** means strictly below `par_level` for count items and at or below a quarter for level items. Cycle items never appear on the list until Phase 4 forecasting exists.
+- **Shopping list**: one open trip at a time. Automatic `below_par` lines are reconciled against stock when the Shop tab opens and on "Update from stock"; manual and ticked lines are never touched. Ticking writes a `bought` event and stores its id on the line (`list_line.event_id`, added to the schema before any deployment) so unticking undoes it. Prices typed on a line are copied onto the event.
+- **Inbox**: quick notes are stored as `capture` rows with status pending and shown on Today. Nothing parses them until Phase 3; "Done" dismisses.
+- **Undo**: a toast with Undo soft-deletes the event that was just written. The item history screen can undo only the most recent event, to keep the ledger honest.
+- **Testing**: domain logic under `app/src/lib/domain/` has vitest unit tests (`npm test`). Screens are smoke-tested in headless Chromium before each push.

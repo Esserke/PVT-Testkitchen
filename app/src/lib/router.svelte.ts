@@ -6,18 +6,26 @@ export const TABS = [
   { path: 'shop', label: 'Shop' },
 ] as const
 
-export type Path = (typeof TABS)[number]['path'] | 'settings'
+export type Path = (typeof TABS)[number]['path'] | 'settings' | 'item'
+const KNOWN: Path[] = ['today', 'stock', 'plan', 'recipes', 'shop', 'settings', 'item']
 
-function parse(): Path {
-  const h = window.location.hash.replace(/^#\/?/, '').split('/')[0]
-  const known: Path[] = ['today', 'stock', 'plan', 'recipes', 'shop', 'settings']
-  return known.includes(h as Path) ? (h as Path) : 'today'
+function parse(): { path: Path; param: string | null } {
+  const [p, param] = window.location.hash.replace(/^#\/?/, '').split('/')
+  return { path: KNOWN.includes(p as Path) ? (p as Path) : 'today', param: param || null }
 }
 
-export const route = $state<{ path: Path }>({ path: parse() })
+export const route = $state<{ path: Path; param: string | null }>(parse())
 
-window.addEventListener('hashchange', () => (route.path = parse()))
+window.addEventListener('hashchange', () => {
+  const r = parse()
+  route.path = r.path
+  route.param = r.param
+})
 
-export function go(path: Path): void {
-  window.location.hash = `/${path}`
+export function go(path: Path, param?: string): void {
+  window.location.hash = param ? `/${path}/${param}` : `/${path}`
+}
+
+export function back(): void {
+  history.back()
 }

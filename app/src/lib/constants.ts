@@ -4,4 +4,4 @@ export const CATEGORIES = [
   'cleaning & laundry', 'pool & garden', 'utilities', 'pet & farm',
 ] as const
 export const UNITS = ['piece', 'pack', 'roll', 'litre', 'kg', 'bottle', 'bag', 'box', 'tin'] as const
-export const SHOPS = ['Woolworths', 'Checkers', 'Pick n Pay', 'Spar', 'Makro', 'Farm stall', 'Other'] as const
+export const SHOPS = ['Woolworths', 'Checkers', 'Spar', 'Everfresh', 'Other'] as const

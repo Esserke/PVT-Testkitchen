@@ -1,12 +1,44 @@
 <script lang="ts">
-  import { liveQuery } from 'dexie'
-  import { db } from '../lib/db/schema'
-  import { put, newId, softDelete } from '../lib/db/repo'
+  import { put, newId } from '../lib/db/repo'
   import { household } from '../lib/household.svelte'
+  import { go } from '../lib/router.svelte'
   import { LOCATIONS, CATEGORIES, UNITS } from '../lib/constants'
-  import type { Item, TrackingMode } from '../lib/db/types'
+  import { stockState, stockMap } from '../lib/stockState.svelte'
+  import { formatStock, type StockStatus } from '../lib/domain/stock'
   import { importStarterCatalogue } from '../lib/seed'
+  import QuickSheet from '../components/QuickSheet.svelte'
+  import StatusPill from '../components/StatusPill.svelte'
+  import type { Item, TrackingMode } from '../lib/db/types'
 
+  const stock = $derived(stockMap(stockState.items, stockState.events))
+  let q = $state('')
+  let filter = $state<'all' | StockStatus>('all')
+
+  const visible = $derived.by(() => {
+    const needle = q.trim().toLowerCase()
+    return stockState.items.filter((i) => {
+      if (i.archived) return false
+      if (filter !== 'all' && stock.get(i.id)?.status !== filter) return false
+      if (!needle) return true
+      return i.name.toLowerCase().includes(needle) || i.aliases.some((a) => a.toLowerCase().includes(needle))
+    })
+  })
+  const byLocation = $derived.by(() => {
+    const m = new Map<string, Item[]>()
+    for (const i of visible) m.set(i.location, [...(m.get(i.location) ?? []), i])
+    return [...m.entries()].sort(([a], [b]) => a.localeCompare(b))
+  })
+  const counts = $derived.by(() => {
+    const c = { low: 0, out: 0, unknown: 0 }
+    for (const i of stockState.items) {
+      if (i.archived) continue
+      const s = stock.get(i.id)?.status
+      if (s === 'low' || s === 'out' || s === 'unknown') c[s]++
+    }
+    return c
+  })
+
+  let sheetItem = $state<Item | null>(null)
   let importing = $state(false)
   let imported = $state<number | null>(null)
   async function loadStarter() {
@@ -15,22 +47,6 @@
     imported = await importStarterCatalogue(household.id)
     importing = false
   }
-
-  let items = $state<Item[]>([])
-  $effect(() => {
-    const id = household.id
-    if (!id) return
-    const sub = liveQuery(() =>
-      db.item.where('household_id').equals(id).filter((i) => !i.deleted && !i.archived).sortBy('name'),
-    ).subscribe((rows) => (items = rows))
-    return () => sub.unsubscribe()
-  })
-
-  const byLocation = $derived.by(() => {
-    const m = new Map<string, Item[]>()
-    for (const i of items) m.set(i.location, [...(m.get(i.location) ?? []), i])
-    return [...m.entries()].sort(([a], [b]) => a.localeCompare(b))
-  })
 
   let adding = $state(false)
   let name = $state('')
@@ -53,6 +69,7 @@
     name = ''
     par = null
     adding = false
+    go('item', row.id)
   }
 </script>
 
@@ -95,31 +112,64 @@
       </div>
     </form>
   {:else}
-    <div class="row" style="margin-bottom:16px">
-      <button onclick={() => (adding = true)}>Add item</button>
-      <button class="ghost" onclick={loadStarter} disabled={importing}>{importing ? 'Loading' : 'Load starter catalogue'}</button>
+    <div class="row" style="margin-bottom:12px">
+      <input bind:value={q} placeholder="Search" aria-label="Search items" />
+      <button onclick={() => (adding = true)}>Add</button>
     </div>
-    {#if imported !== null}
-      <p class="muted" style="margin-top:-8px">{imported === 0 ? 'Everything in the starter catalogue is already here.' : `Added ${imported} items from the kitchen photos.`}</p>
-    {/if}
+    <div class="row chips" style="margin-bottom:14px">
+      <button class:ghost={filter !== 'all'} onclick={() => (filter = 'all')}>All</button>
+      <button class:ghost={filter !== 'out'} onclick={() => (filter = 'out')}>Out · {counts.out}</button>
+      <button class:ghost={filter !== 'low'} onclick={() => (filter = 'low')}>Low · {counts.low}</button>
+      <button class:ghost={filter !== 'unknown'} onclick={() => (filter = 'unknown')}>Uncounted · {counts.unknown}</button>
+    </div>
   {/if}
 
-  {#if items.length === 0}
-    <div class="empty">Nothing here yet. Load the starter catalogue drafted from the kitchen photos, or add the first thing you can see in the pantry.</div>
+  {#if !stockState.ready}
+    <div class="empty">Loading</div>
+  {:else if stockState.items.length === 0}
+    <div class="empty">
+      <p>Nothing here yet.</p>
+      <button onclick={loadStarter} disabled={importing}>{importing ? 'Loading' : 'Load starter catalogue'}</button>
+      <p class="muted" style="margin-top:10px;font-size:13px">124 items drafted from the kitchen photos. Or add the first thing you can see in the pantry.</p>
+    </div>
   {:else}
+    {#if imported !== null}
+      <p class="muted">{imported === 0 ? 'Everything in the starter catalogue is already here.' : `Added ${imported} items.`}</p>
+    {/if}
+    {#if visible.length === 0}
+      <div class="empty">Nothing matches.</div>
+    {/if}
     {#each byLocation as [loc, rows] (loc)}
       <p class="eyebrow" style="margin:8px 0 6px">{loc}</p>
-      <div class="list" style="margin-bottom:14px">
+      <div class="card" style="padding:0 12px;margin-bottom:14px">
         {#each rows as it (it.id)}
-          <div class="card row" style="padding:10px 12px">
-            <div style="flex:1">
-              <div>{it.name}</div>
-              <div class="muted" style="font-size:12.5px">{it.category} · {it.unit}{it.par_level != null ? ` · keep ≥ ${it.par_level}` : ''} · {it.tracking_mode}</div>
-            </div>
-            <button class="ghost" onclick={() => softDelete('item', it.id)} aria-label="Remove {it.name}">Remove</button>
+          {@const s = stock.get(it.id)}
+          <div class="row line">
+            <button class="name" onclick={() => go('item', it.id)}>
+              <span>{it.name}</span>
+              <span class="muted mono" style="font-size:12.5px">{formatStock(it, s?.stock ?? null)}{it.par_level != null && it.tracking_mode === 'count' ? ` · keep ${it.par_level}` : ''}</span>
+            </button>
+            <StatusPill status={s?.status ?? 'unknown'} />
+            <button class="more" onclick={() => (sheetItem = it)} aria-label="Update {it.name}">···</button>
           </div>
         {/each}
       </div>
     {/each}
+    {#if filter === 'all' && !q}
+      <p style="text-align:center"><button class="ghost" onclick={loadStarter} disabled={importing}>Add missing starter items</button></p>
+    {/if}
   {/if}
 </div>
+
+{#if sheetItem}
+  <QuickSheet item={sheetItem} stock={stock.get(sheetItem.id)} onclose={() => (sheetItem = null)} />
+{/if}
+
+<style>
+  .chips { flex-wrap: wrap; }
+  .chips button { padding: 7px 11px; font-size: 13px; }
+  .line { padding: 8px 0; border-bottom: 1px solid var(--rule-soft); }
+  .line:last-child { border-bottom: 0; }
+  .name { flex: 1; background: none; color: var(--ink); text-align: left; padding: 0; display: flex; flex-direction: column; gap: 2px; font-weight: 400; }
+  .more { background: none; color: var(--muted); padding: 4px 6px; }
+</style>

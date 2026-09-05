@@ -14,6 +14,9 @@
   import Recipes from './routes/Recipes.svelte'
   import Shop from './routes/Shop.svelte'
   import Settings from './routes/Settings.svelte'
+  import ItemDetail from './routes/ItemDetail.svelte'
+  import Toast from './components/Toast.svelte'
+  import { watchStock } from './lib/stockState.svelte'
 
   // When a session appears, find the household this user belongs to; then start syncing.
   $effect(() => {
@@ -23,8 +26,12 @@
     if (supabase && auth.session && household.id) startSync()
   })
 
+  $effect(() => {
+    watchStock(supabase && !auth.session ? null : household.id)
+  })
+
   const title = $derived(
-    route.path === 'settings' ? 'Settings' : route.path.charAt(0).toUpperCase() + route.path.slice(1),
+    route.path === 'settings' ? 'Settings' : route.path === 'item' ? 'Item' : route.path.charAt(0).toUpperCase() + route.path.slice(1),
   )
 </script>
 
@@ -51,9 +58,11 @@
     {:else if route.path === 'recipes'}<Recipes />
     {:else if route.path === 'shop'}<Shop />
     {:else if route.path === 'settings'}<Settings />
+    {:else if route.path === 'item'}<ItemDetail />
     {/if}
   </main>
   <TabBar />
+  <Toast />
 {/if}
 
 <style>
