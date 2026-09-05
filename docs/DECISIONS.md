@@ -47,3 +47,10 @@
 - **Shop on purchases.** Ticking a line stores the shop name in the event note, so spend by shop is real rather than guessed from the item's usual shop.
 - **Insights** is a page rather than a tab: running out with confidence dots, changed pace (four weeks against the previous four, 30% or more), spend per month with category and shop breakdowns, recipe ruts and forgotten favourites, snack box variety and what came back, and waste with a cost guess from the last price paid. Single-hue bars with text labels; no chart library.
 - **Threw away** added to the quick sheet so waste can be logged in one tap.
+
+## 2026-09-05 — Sync hardening after first two-phone day
+
+- A phone sat on "syncing" with 65 changes waiting because one request hung on the mobile network and the run never finished. Every Supabase request now has a 20-second timeout, and a run older than 45 seconds is abandoned and restarted.
+- Rows that can never be accepted (foreign key, policy, check or type violations) no longer block the whole outbox: the chunk is retried one row at a time and the refused rows are set aside with the server's message shown in Settings. Rows belonging to a household this phone has left are dropped up front.
+- Settings gains "Discard N waiting" as a last resort. Local rows stay; only the send queue is cleared.
+- The starter catalogue import waits for a first pull when online, so a second phone cannot seed 124 duplicates before it has seen the first phone's items.
