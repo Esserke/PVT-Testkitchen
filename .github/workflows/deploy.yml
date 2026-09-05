@@ -32,8 +32,10 @@ jobs:
       - run: npm run build
         env:
           VITE_BASE: /${{ github.event.repository.name }}/
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          # The Larder project. The anon key is public by design; row-level security protects the data.
+          # Repository variables of the same name override these if ever set.
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'https://zmdcijdirhefmatdrujn.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InptZGNpamRpcmhlZm1hdGRydWpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg1ODU5OTcsImV4cCI6MjEwNDE2MTk5N30.kBdDNRVyAeF7RLHjb1Ro3Yx5WZo1FABWiAdaWjO4KZo' }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: app/dist

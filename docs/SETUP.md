@@ -25,7 +25,7 @@ Leave the two keys empty and the app runs in local-only mode with no sign-in and
 ## 3. GitHub Pages deploy
 
 1. In the repository go to **Settings → Pages** and set *Source* to **GitHub Actions**.
-2. **Settings → Secrets and variables → Actions → Variables**: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. The anon key is designed to be public; row-level security is what protects the data.
+2. The project URL and anon key are set as defaults in `.github/workflows/deploy.yml` (the anon key is designed to be public; row-level security protects the data). To point at a different project, add repository variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` under **Settings → Secrets and variables → Actions → Variables**; they override the defaults.
 3. Merge to `main`. The workflow in `.github/workflows/deploy.yml` builds and publishes to `https://<user>.github.io/<repo>/`.
 
 ## 4. Phones
