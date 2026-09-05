@@ -5,7 +5,7 @@ One-time steps to get Larder running on two phones. About 20 minutes.
 ## 1. Supabase project
 
 1. Create a project at https://supabase.com (free tier). Pick a region close to South Africa; `eu-west` is fine.
-2. In the dashboard open **SQL Editor**, paste the whole of `supabase/migrations/0001_schema.sql`, run it. It creates the tables, row-level security, the two onboarding functions and turns on realtime.
+2. In the dashboard open **SQL Editor** and run each file in `supabase/migrations/` in order (`0001_…`, then `0002_…`). It creates the tables, row-level security, the two onboarding functions and turns on realtime.
    Alternatively, with the Supabase CLI: `supabase link --project-ref <ref>` then `supabase db push`.
 3. **Authentication → Providers → Email**: leave Email enabled, turn on *Magic Link* (it is on by default). Turn off *Confirm email* if you want the first sign-in to be a single click.
 4. **Authentication → URL Configuration**: add your GitHub Pages URL (see step 3 below) to *Redirect URLs*, and `http://localhost:5173` for development.
