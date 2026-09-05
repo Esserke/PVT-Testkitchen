@@ -12,8 +12,14 @@ export function nowIso(): string {
   return new Date().toISOString()
 }
 
+// Rows may arrive as Svelte reactive proxies, which IndexedDB cannot clone.
+// Our rows are plain JSON data, so a JSON round-trip yields a clean copy.
+function plain<T>(row: T): T {
+  return JSON.parse(JSON.stringify(row)) as T
+}
+
 export async function put<T extends Synced>(table: SyncedTable, row: T): Promise<T> {
-  const stamped = { ...row, updated_at: nowIso() }
+  const stamped = plain({ ...row, updated_at: nowIso() })
   await db.transaction('rw', db.synced(table), db.outbox, async () => {
     await db.synced(table).put(stamped)
     await db.outbox.where('[table+row_id]').equals([table, row.id]).delete()

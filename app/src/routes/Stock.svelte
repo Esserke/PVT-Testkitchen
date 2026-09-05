@@ -63,7 +63,7 @@
       id: newId(), household_id: household.id, updated_at: '', deleted: false,
       name: name.trim(), aliases: [], category, location, unit, pack_size: 1, par_level: par,
       tracking_mode: mode, preferred_shop: null, typical_price_zar: null, bulk_ok: false,
-      source: 'bought', perishable_days: null, snackbox_ok: false, kid_ok: true, archived: false,
+      source: 'bought', perishable_days: null, snackbox_ok: false, snack_component: null, kid_ok: true, archived: false,
     }
     await put('item', row)
     name = ''

@@ -9,6 +9,19 @@
   import { showToast } from '../lib/toast.svelte'
   import QuickSheet from '../components/QuickSheet.svelte'
   import type { Capture, Item } from '../lib/db/types'
+  import { planState, slotAt } from '../lib/planState.svelte'
+  import { SLOTS, toIsoDate, slotsForDay } from '../lib/domain/plan'
+
+  const todayIso = toIsoDate(new Date())
+  const itemsById = $derived(new Map(stockState.items.map((i) => [i.id, i])))
+  const recipesById = $derived(new Map(planState.recipes.map((r) => [r.id, r])))
+  const meals = $derived(
+    SLOTS.filter((s) => slotsForDay(todayIso).includes(s.slot)).map((s) => {
+      const ms = slotAt(planState.slots, todayIso, s.slot)
+      const txt = !ms ? '' : ms.recipe_id ? recipesById.get(ms.recipe_id)?.title ?? '?' : ms.free_text ?? ms.item_ids.map((id) => itemsById.get(id)?.name ?? '?').join(', ')
+      return { ...s, txt, done: ms?.status === 'cooked' }
+    }),
+  )
 
   const stock = $derived(stockMap(stockState.items, stockState.events))
   const active = $derived(stockState.items.filter((i) => !i.archived))
@@ -73,6 +86,20 @@
     </div>
   {/if}
 
+  <div class="row" style="justify-content:space-between;margin-bottom:6px">
+    <p class="eyebrow" style="margin:0">Today's meals</p>
+    <button class="ghost" style="padding:6px 10px;font-size:13px" onclick={() => go('plan')}>Plan</button>
+  </div>
+  <div class="card" style="padding:4px 12px;margin-bottom:18px">
+    {#each meals as m (m.slot)}
+      <div class="row meal" class:box={m.slot === 'school_snackbox'}>
+        <span class="lbl">{m.label}</span>
+        <span style="flex:1" class:muted={!m.txt || m.done}>{m.txt || '—'}</span>
+        {#if m.done}<span class="pill">✓</span>{/if}
+      </div>
+    {/each}
+  </div>
+
   {#if runningOut.length}
     <div class="row" style="justify-content:space-between;margin-bottom:6px">
       <p class="eyebrow" style="margin:0">Running out</p>
@@ -123,4 +150,8 @@
   .qty { font-size: 12px; color: var(--muted); }
   .more { background: none; color: var(--muted); border-left: 1px solid var(--rule-soft); border-radius: 0; padding: 0 10px; font-size: 14px; }
   .link { background: none; color: var(--ink); padding: 0; text-align: left; font-weight: 400; }
+  .meal { padding: 7px 0; border-bottom: 1px solid var(--rule-soft); font-size: 14.5px; }
+  .meal:last-child { border-bottom: 0; }
+  .lbl { font: 500 11px/1 var(--mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); width: 84px; }
+  .box .lbl { color: var(--ochre); }
 </style>

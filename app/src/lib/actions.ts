@@ -1,7 +1,8 @@
 // The verbs of the app. Each writes one or more ledger rows through the repo.
 import { put, newId, nowIso, softDelete } from './db/repo'
 import { household } from './household.svelte'
-import type { Capture, CaptureSource, Item, ListLine, StockEvent, StockEventType, Trip } from './db/types'
+import type { Capture, CaptureSource, Idea, Item, ListLine, MealSlot, MealSlotName, Recipe, RecipeIngredient, StockEvent, StockEventType, Trip } from './db/types'
+import { cookedDeductions, addDays } from './domain/plan'
 
 function base() {
   if (!household.id) throw new Error('No household')
@@ -75,4 +76,42 @@ export async function captureText(text: string): Promise<Capture> {
 
 export async function saveCapture(c: Capture): Promise<Capture> {
   return put('capture', c)
+}
+
+// ------------------------------------------------------------ recipes, ideas, plan
+
+export const saveRecipe = (r: Recipe) => put('recipe', r)
+export async function newRecipe(title: string, source_url: string | null = null): Promise<Recipe> {
+  return put('recipe', { ...base(), title, servings: 3, prep_minutes: null, cook_minutes: null, steps: null, source_url, photo_path: null, tags: [], rating: {}, daughter_verdict: null })
+}
+export const saveIngredient = (i: RecipeIngredient) => put('recipe_ingredient', i)
+export function blankIngredient(recipe_id: string): RecipeIngredient {
+  return { ...base(), recipe_id, item_id: null, free_text: null, quantity: null, unit: null, optional: false }
+}
+export const deleteIngredient = (id: string) => softDelete('recipe_ingredient', id)
+
+export const saveIdea = (i: Idea) => put('idea', i)
+export async function newIdea(title: string, source_url: string | null, why: string | null): Promise<Idea> {
+  return put('idea', { ...base(), title, source_url, photo_path: null, added_by: household.memberId, why, tags: [], status: 'idea', created_at: nowIso() })
+}
+
+export const saveSlot = (s: MealSlot) => put('meal_slot', s)
+export function blankSlot(date: string, slot: MealSlotName): MealSlot {
+  return { ...base(), date, slot, recipe_id: null, free_text: null, servings: 3, for_members: [], item_ids: [], status: 'planned', notes: null }
+}
+export async function upsertSlot(existing: MealSlot | undefined, date: string, slot: MealSlotName, patch: Partial<MealSlot>): Promise<MealSlot> {
+  return saveSlot({ ...(existing ?? blankSlot(date, slot)), ...patch })
+}
+export const clearSlot = (s: MealSlot) => softDelete('meal_slot', s.id)
+
+// Cooking deducts count-tracked ingredients and marks the slot cooked.
+export async function cookSlot(slot: MealSlot, recipe: Recipe | null, ingredients: RecipeIngredient[], itemsById: Map<string, Item>): Promise<number> {
+  const deductions = cookedDeductions(slot, recipe, ingredients, itemsById)
+  for (const d of deductions) await recordEvent(d.item, 'used', d.quantity, { source: 'plan', note: recipe?.title ?? slot.free_text ?? undefined })
+  await saveSlot({ ...slot, status: 'cooked' })
+  return deductions.length
+}
+
+export async function leftoversTomorrow(slot: MealSlot, title: string, existingTomorrow: MealSlot | undefined): Promise<MealSlot> {
+  return upsertSlot(existingTomorrow, addDays(slot.date, 1), 'lunch', { recipe_id: null, item_ids: [], free_text: `Leftover ${title}`, notes: 'leftovers', status: 'planned' })
 }

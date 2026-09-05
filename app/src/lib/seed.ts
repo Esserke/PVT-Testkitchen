@@ -3,7 +3,7 @@
 import csv from '../data/items.csv?raw'
 import { db } from './db/schema'
 import { put, newId } from './db/repo'
-import type { Item, ItemSource, TrackingMode } from './db/types'
+import type { Item, ItemSource, SnackComponent, TrackingMode } from './db/types'
 
 function parseCsv(text: string): Record<string, string>[] {
   const lines = text.trim().split(/\r?\n/)
@@ -34,6 +34,7 @@ export function starterCatalogue(householdId: string): Item[] {
     source: (r.source || 'bought') as ItemSource,
     perishable_days: null,
     snackbox_ok: r.snackbox_ok === 'true',
+    snack_component: (r.snack_component || null) as SnackComponent | null,
     kid_ok: r.kid_ok !== 'false',
     archived: false,
   }))

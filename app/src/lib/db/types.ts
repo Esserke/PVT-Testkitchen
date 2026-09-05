@@ -9,6 +9,8 @@ export interface Synced {
 }
 
 export type TrackingMode = 'count' | 'level' | 'cycle'
+export const SNACK_COMPONENTS = ['fruit', 'veg', 'protein', 'carb', 'treat', 'drink'] as const
+export type SnackComponent = (typeof SNACK_COMPONENTS)[number]
 export type ItemSource = 'bought' | 'farm'
 
 export interface Item extends Synced {
@@ -26,6 +28,7 @@ export interface Item extends Synced {
   source: ItemSource
   perishable_days: number | null
   snackbox_ok: boolean
+  snack_component: SnackComponent | null
   kid_ok: boolean
   archived: boolean
 }
@@ -98,6 +101,7 @@ export interface MealSlot extends Synced {
   free_text: string | null
   servings: number | null
   for_members: string[]
+  item_ids: string[]
   status: 'planned' | 'cooked' | 'skipped' | 'swapped'
   notes: string | null
 }

@@ -3,7 +3,9 @@
   import { db } from '../lib/db/schema'
   import { household } from '../lib/household.svelte'
   import { stockState, stockMap } from '../lib/stockState.svelte'
-  import { belowParItems, reconcile, groupByShop } from '../lib/domain/list'
+  import { belowParItems, reconcile, groupByShop, mergeNeeds } from '../lib/domain/list'
+  import { planNeeds, planLines, toIsoDate, addDays } from '../lib/domain/plan'
+  import { planState, ingredientsByRecipe } from '../lib/planState.svelte'
   import { newTrip, addLine, saveLine, closeTrip, bought, undoEvent } from '../lib/actions'
   import { softDelete, put } from '../lib/db/repo'
   import { showToast } from '../lib/toast.svelte'
@@ -35,7 +37,11 @@
 
   const stock = $derived(stockMap(stockState.items, stockState.events))
   const itemsById = $derived(new Map(stockState.items.map((i) => [i.id, i])))
-  const needed = $derived(belowParItems(stockState.items, stock))
+  // The list covers today until a week after the trip: what is low now, plus what the planned meals need.
+  const today = toIsoDate(new Date())
+  const window = $derived({ from: today, to: addDays(trip?.planned_date && trip.planned_date > today ? trip.planned_date : today, 7) })
+  const fromPlan = $derived(planLines(planNeeds(planState.slots, new Map(planState.recipes.map((r) => [r.id, r])), ingredientsByRecipe(planState.ingredients), itemsById, window.from, window.to), itemsById, stock))
+  const needed = $derived(mergeNeeds(belowParItems(stockState.items, stock), fromPlan))
   const diff = $derived(reconcile(lines, needed))
   const grouped = $derived(groupByShop(lines.map((l) => ({ ...l, shop: l.shop ?? itemsById.get(l.item_id ?? '')?.preferred_shop ?? null }))))
   const remaining = $derived(lines.filter((l) => !l.checked).length)
@@ -53,15 +59,16 @@
   async function update() {
     if (!trip) return
     for (const n of diff.add) {
-      await addLine(trip, { item_id: n.item.id, free_text: null, quantity: n.quantity, reason: 'below_par', shop: n.item.preferred_shop, checked: false, price_paid_zar: null, event_id: null })
+      await addLine(trip, { item_id: n.item.id, free_text: null, quantity: n.quantity, reason: n.reason, shop: n.item.preferred_shop, checked: false, price_paid_zar: null, event_id: null })
     }
+    for (const l of diff.update) await saveLine(l)
     for (const l of diff.remove) await softDelete('list_line', l.id)
-    showToast(`${diff.add.length} added, ${diff.remove.length} removed`)
+    showToast(`${diff.add.length} added, ${diff.update.length} changed, ${diff.remove.length} removed`)
   }
   // Refresh automatically when the list is opened and stock is known.
   let autoDone = $state(false)
   $effect(() => {
-    if (trip && stockState.ready && !autoDone && (diff.add.length || diff.remove.length)) {
+    if (trip && stockState.ready && planState.ready && !autoDone && (diff.add.length || diff.remove.length || diff.update.length)) {
       autoDone = true
       void update()
     }
@@ -109,7 +116,7 @@
   const qty = (l: ListLine) => {
     const item = l.item_id ? itemsById.get(l.item_id) : undefined
     if (!item) return l.quantity ?? 1
-    return `${l.quantity ?? 1} × ${item.pack_size > 1 ? `${item.pack_size} ${item.unit}` : item.unit}`
+    return `${l.quantity ?? 1} × ${item.pack_size !== 1 ? `${item.pack_size} ${item.unit}` : item.unit}`
   }
 </script>
 
@@ -119,7 +126,7 @@
   {:else if !trip}
     <div class="card">
       <p class="eyebrow">Next town trip</p>
-      <p class="muted">Start a trip and the list fills itself with everything below its keep-at-least level.</p>
+      <p class="muted">Start a trip and the list fills itself with everything that is low, plus what the planned meals need.</p>
       <div class="row">
         <input type="date" bind:value={date} aria-label="Trip date" />
         <button onclick={start}>Start trip</button>
@@ -133,7 +140,7 @@
         <span class="muted" style="font-size:13.5px">{remaining} to get</span>
       </div>
       <div class="row">
-        <button class="ghost" onclick={update} disabled={!diff.add.length && !diff.remove.length}>Update from stock</button>
+        <button class="ghost" onclick={update} disabled={!diff.add.length && !diff.remove.length && !diff.update.length}>Update</button>
         <button class="ghost" onclick={finish}>Finish</button>
       </div>
     </div>
@@ -156,7 +163,7 @@
             <input type="checkbox" checked={l.checked} onchange={() => toggle(l)} style="width:22px;height:22px" aria-label="Got {label(l)}" />
             <div style="flex:1">
               <div>{label(l)}</div>
-              <div class="muted" style="font-size:12.5px">{qty(l)}{l.reason === 'below_par' ? ' · low' : ''}</div>
+              <div class="muted" style="font-size:12.5px">{qty(l)}{l.reason === 'below_par' ? ' · low' : l.reason === 'plan' ? ' · for meals' : ''}</div>
             </div>
             <input class="price mono" type="number" inputmode="decimal" min="0" step="0.01" placeholder="R" value={l.price_paid_zar ?? ''} onchange={(e) => setPrice(l, (e.currentTarget as HTMLInputElement).value)} aria-label="Price paid" />
             <button class="more" onclick={() => softDelete('list_line', l.id)} aria-label="Remove {label(l)}">×</button>

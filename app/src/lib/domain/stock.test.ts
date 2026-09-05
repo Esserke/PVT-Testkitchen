@@ -6,7 +6,7 @@ const item = (over: Partial<Item> = {}): Item => ({
   id: 'i1', household_id: 'h', updated_at: '', deleted: false,
   name: 'Milk', aliases: [], category: 'dairy', location: 'fridge', unit: 'litre', pack_size: 6,
   par_level: 6, tracking_mode: 'count', preferred_shop: null, typical_price_zar: null, bulk_ok: false,
-  source: 'bought', perishable_days: null, snackbox_ok: false, kid_ok: true, archived: false, ...over,
+  source: 'bought', perishable_days: null, snackbox_ok: false, snack_component: null, kid_ok: true, archived: false, ...over,
 })
 let n = 0
 const ev = (type: StockEvent['type'], quantity: number, at?: string): StockEvent => ({

@@ -21,3 +21,14 @@
 - **Inbox**: quick notes are stored as `capture` rows with status pending and shown on Today. Nothing parses them until Phase 3; "Done" dismisses.
 - **Undo**: a toast with Undo soft-deletes the event that was just written. The item history screen can undo only the most recent event, to keep the ledger honest.
 - **Testing**: domain logic under `app/src/lib/domain/` has vitest unit tests (`npm test`). Screens are smoke-tested in headless Chromium before each push.
+
+## 2026-09-05 — Phase 2
+
+- **Week view** is a vertical list of day cards, not a 7-column grid, because it is used on a phone. Weeks start on Monday. The snack box row appears Monday to Friday only.
+- **A meal slot** holds one of: a recipe, free text, or a list of items (`meal_slot.item_ids`, added to the schema). Snack boxes are item lists. Ideas placed on the plan become free text prefixed "Idea:" and the idea moves to `scheduled`.
+- **Snack components** live on the item (`item.snack_component`: fruit, veg, protein, carb, treat, drink) with `snackbox_ok`. Auto-fill picks one item per component per school day, avoids repeats within the week, prefers least-recently-used, and skips items that are out. Peanut butter is excluded from the box by default in case of a no-nuts rule.
+- **Ingredient units**: grams and kilograms, millilitres and litres convert; plurals match; anything else that cannot be converted counts as "needs one" so it still reaches the list. Optional and free-text ingredients never reach the list.
+- **Cooking** deducts count-tracked items only, scaled by servings over the recipe's servings. Level and cycle items are not touched, since a splash of oil is not measurable.
+- **List window**: from today to seven days after the trip date. Plan needs and below-par needs merge into one line per item with the larger quantity; the reason shows "for meals" when the plan drove it. Automatic lines are raised, added or removed on reconcile; manual and ticked lines are never touched.
+- **Leftovers** write tomorrow's lunch as free text "Leftover <dinner>", not a recipe, so nothing is deducted twice.
+- **Fill dinners** is deterministic for now: least recently cooked, then highest rating. Claude-assisted suggestions remain Phase 5.

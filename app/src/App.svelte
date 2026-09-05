@@ -15,6 +15,8 @@
   import Shop from './routes/Shop.svelte'
   import Settings from './routes/Settings.svelte'
   import ItemDetail from './routes/ItemDetail.svelte'
+  import RecipeEdit from './routes/RecipeEdit.svelte'
+  import { watchPlan } from './lib/planState.svelte'
   import Toast from './components/Toast.svelte'
   import { watchStock } from './lib/stockState.svelte'
 
@@ -27,11 +29,13 @@
   })
 
   $effect(() => {
-    watchStock(supabase && !auth.session ? null : household.id)
+    const id = supabase && !auth.session ? null : household.id
+    watchStock(id)
+    watchPlan(id)
   })
 
   const title = $derived(
-    route.path === 'settings' ? 'Settings' : route.path === 'item' ? 'Item' : route.path.charAt(0).toUpperCase() + route.path.slice(1),
+    route.path === 'settings' ? 'Settings' : route.path === 'item' ? 'Item' : route.path === 'recipe' ? 'Recipe' : route.path.charAt(0).toUpperCase() + route.path.slice(1),
   )
 </script>
 
@@ -59,6 +63,7 @@
     {:else if route.path === 'shop'}<Shop />
     {:else if route.path === 'settings'}<Settings />
     {:else if route.path === 'item'}<ItemDetail />
+    {:else if route.path === 'recipe'}<RecipeEdit />
     {/if}
   </main>
   <TabBar />
