@@ -1,0 +1,125 @@
+name,category,location,unit,pack_size,par_level,tracking_mode,preferred_shop,snackbox_ok,kid_ok,source,aliases
+Full cream long-life milk,dairy,pantry,litre,6,6,count,Spar,false,true,bought,milk|UHT milk|long life milk
+Fresh full cream milk,dairy,fridge,litre,1,2,count,Spar,false,true,bought,fresh milk
+Yoghurt pots,dairy,fridge,piece,6,6,count,Woolworths,true,true,bought,yoghurt|yogurt
+Cheese block,dairy,fridge,piece,1,1,level,Checkers,true,true,bought,cheddar|gouda
+Butter,dairy,fridge,piece,1,1,level,Checkers,false,true,bought,
+Eggs,fresh,pantry,piece,18,12,count,Spar,true,true,bought,egg
+Lemons,fresh,fridge,piece,1,3,count,Spar,false,true,bought,lemon
+Cucumber,fresh,fridge,piece,1,1,count,Spar,true,true,bought,
+Cauliflower,fresh,fridge,piece,1,0,count,Spar,false,true,bought,
+Fresh herbs,fresh,fridge,pack,1,0,level,Woolworths,false,true,bought,herbs|coriander|parsley
+Potatoes,fresh,pantry,kg,2,2,level,Spar,false,true,bought,potato
+Onions,fresh,pantry,kg,1,1,level,Spar,false,true,bought,onion
+Apples,fresh,fridge,piece,1,5,count,Spar,true,true,bought,apple
+Bananas,fresh,pantry,piece,1,5,count,Spar,true,true,bought,banana
+Grapes,fresh,fridge,pack,1,0,level,Woolworths,true,true,bought,
+Fruit juice boxes,drinks,fridge,piece,6,6,count,Checkers,true,true,bought,juice box|Sunfirst|Liqui Fruit
+Sausage / boerewors,fresh,fridge,kg,1,0,level,Spar,false,true,bought,wors|boerewors|sausage
+Cold meat,fresh,fridge,pack,1,1,level,Woolworths,true,true,bought,ham|polony
+Tomato sauce,pantry,fridge,bottle,1,1,count,Checkers,false,true,bought,ketchup|All Gold
+Mayonnaise,pantry,fridge,bottle,1,1,count,Checkers,false,true,bought,mayo
+Mustard,pantry,fridge,bottle,1,1,count,Checkers,false,true,bought,Colman's
+Worcester and steak sauces,pantry,fridge,bottle,1,1,level,Checkers,false,true,bought,Wellington's|Worcester sauce|steak sauce
+Chutney,pantry,fridge,bottle,1,1,count,Checkers,false,true,bought,Mrs Balls
+Soy sauce,pantry,pantry,bottle,1,1,count,Checkers,false,true,bought,
+Red wine vinegar,pantry,pantry,bottle,1,1,count,Checkers,false,true,bought,
+White vinegar,pantry,pantry,bottle,1,1,count,Spar,false,true,bought,spirit vinegar
+Sunflower oil,pantry,fridge,litre,2,2,level,Makro,false,true,bought,cooking oil|oil
+Olive oil,pantry,pantry,bottle,1,1,level,Woolworths,false,true,bought,
+Frozen chicken nuggets,frozen,freezer,box,1,1,count,Checkers,false,true,bought,nuggets
+Fish fingers,frozen,freezer,box,1,1,count,Checkers,false,true,bought,
+Frozen chips,frozen,freezer,bag,1,1,count,Checkers,false,true,bought,chips|fries
+Basa fillets,frozen,freezer,pack,1,1,count,Checkers,false,true,bought,fish|hake
+Frozen peas,frozen,freezer,bag,1,1,count,Checkers,false,true,bought,peas
+Frozen mixed veg,frozen,freezer,bag,1,1,count,Checkers,false,true,bought,mixed veg
+Frozen blueberries,frozen,freezer,bag,1,1,count,Woolworths,true,true,bought,blueberries
+Ice cream,frozen,freezer,litre,2,1,level,Checkers,false,true,bought,Dairy Dream
+Beef mince,frozen,freezer,kg,1,2,count,Spar,false,true,bought,mince
+Chicken pieces,frozen,freezer,kg,1,2,count,Spar,false,true,bought,chicken|chicken breasts|whole chicken
+Pork chops,frozen,freezer,pack,1,1,count,Spar,false,true,bought,pork
+Braai meat,frozen,freezer,kg,1,1,level,Spar,false,true,bought,steak|lamb chops|braai pack
+Brown bread,pantry,chest freezer,piece,1,3,count,Spar,true,true,bought,bread|Sunshine bread|loaf
+Sourdough bread,pantry,chest freezer,piece,1,1,count,Woolworths,true,true,bought,sourdough
+Frozen pizza,frozen,chest freezer,piece,1,2,count,Checkers,false,true,bought,Dr Oetker|pizza
+Poppadoms,pantry,chest freezer,box,1,0,count,Checkers,false,true,bought,
+Two-minute noodles,pantry,pantry,pack,1,4,count,Spar,false,true,bought,Maggi noodles|noodles
+Noodle soup packets,pantry,fridge,pack,1,2,count,Woolworths,false,true,bought,
+Popcorn kernels,pantry,pantry,bag,1,1,count,Spar,true,true,bought,popcorn
+Chicken stock cubes,pantry,pantry,box,1,1,level,Spar,false,true,bought,stock|Knorr cubes
+Packet soups,pantry,pantry,pack,1,3,count,Spar,false,true,bought,Knorr soup
+Bread crumbs,pantry,pantry,bag,1,1,count,Woolworths,false,true,bought,
+Penne pasta,pantry,pantry,kg,0.5,1,level,Spar,false,true,bought,pasta
+Spaghetti,pantry,pantry,kg,0.5,1,count,Spar,false,true,bought,
+Lasagne sheets,pantry,pantry,box,1,1,count,Spar,false,true,bought,instant lasagne
+Rice,pantry,pantry,kg,2,2,level,Spar,false,true,bought,basmati|Spekko
+Couscous,pantry,pantry,bag,1,0,level,Woolworths,false,true,bought,
+Tinned tomatoes,pantry,pantry,tin,1,4,count,Spar,false,true,bought,chopped tomatoes|tomato tins
+Tinned beans,pantry,pantry,tin,1,3,count,Spar,false,true,bought,baked beans|butter beans
+Tinned tuna,pantry,pantry,tin,1,3,count,Spar,true,true,bought,tuna
+Chickpeas,pantry,pantry,tin,1,2,count,Spar,false,true,bought,
+Chakalaka,pantry,pantry,tin,1,1,count,Spar,false,true,bought,
+Peri-peri sauce,pantry,pantry,bottle,1,1,count,Spar,false,false,bought,Nando's|peri peri
+Garam masala,pantry,pantry,pack,1,1,level,Spar,false,true,bought,masala
+Chicken tikka spice,pantry,pantry,piece,1,1,level,Spar,false,true,bought,tikka
+Cinnamon,pantry,pantry,piece,1,1,level,Woolworths,false,true,bought,
+Braai spice / salt,pantry,pantry,piece,1,1,level,Spar,false,true,bought,spice|braai salt
+Table salt,pantry,pantry,kg,1,1,level,Spar,false,true,bought,salt|Cerebos
+Black pepper,pantry,pantry,piece,1,1,level,Spar,false,true,bought,pepper
+Otees cereal,pantry,pantry,box,1,1,count,Spar,true,true,bought,Otees|Bokomo Otees
+Corn flakes,pantry,pantry,box,1,1,count,Spar,false,true,bought,cornflakes
+All Bran flakes,pantry,pantry,box,1,1,count,Spar,false,true,bought,All Bran
+Weet-Bix,pantry,pantry,box,1,1,count,Spar,false,true,bought,Weetbix
+Granola,pantry,pantry,bag,1,1,count,Woolworths,false,true,bought,muesli
+Oats,pantry,pantry,kg,1,1,level,Spar,false,true,bought,porridge oats
+Rusks,pantry,pantry,box,1,1,count,Spar,true,true,bought,Ouma rusks|beskuit
+Crackers,pantry,pantry,box,1,1,count,Spar,true,true,bought,Provita|Salticrax
+Rice cakes,pantry,pantry,pack,1,1,count,Woolworths,true,true,bought,
+Raisins,pantry,pantry,box,1,1,count,Spar,true,true,bought,
+Mixed nuts,pantry,pantry,pack,1,1,level,Woolworths,false,false,bought,nuts|peanuts
+Peanut butter,pantry,pantry,piece,1,1,level,Spar,true,true,bought,
+Honey,pantry,pantry,piece,1,1,level,Spar,false,true,bought,
+Jam,pantry,pantry,piece,1,1,level,Spar,true,true,bought,
+Rooibos tea,drinks,pantry,box,1,1,count,Spar,false,true,bought,Freshpak|rooibos
+Ceylon tea,drinks,pantry,box,1,1,count,Spar,false,true,bought,Five Roses|tea
+Ground coffee,drinks,pantry,bag,1,1,count,Woolworths,false,false,bought,coffee|filter coffee
+Instant coffee,drinks,pantry,piece,1,1,level,Spar,false,false,bought,Ricoffy|Nescafe
+Sugar,pantry,pantry,kg,2.5,1,level,Spar,false,true,bought,white sugar
+Cake flour,pantry,pantry,kg,2.5,1,level,Spar,false,true,bought,flour|Snowflake
+Self-raising flour,pantry,pantry,kg,1,1,level,Spar,false,true,bought,
+Baking powder,pantry,pantry,piece,1,1,level,Spar,false,true,bought,Royal baking powder
+Cupcake cases,pantry,pantry,pack,1,1,level,Spar,false,true,bought,
+Cocoa,pantry,pantry,piece,1,1,level,Spar,false,true,bought,
+Dog food tins,pet & farm,pantry,tin,1,6,count,Spar,false,false,bought,Husky|dog food
+Dry dog food,pet & farm,store room,kg,8,4,level,Makro,false,false,bought,dog pellets|kibble
+Drinking water 15.9L,utilities,store room,bottle,1,1,count,Spar,false,true,bought,water|BWT water|big water
+Drinking water 5L,utilities,store room,bottle,1,2,count,Woolworths,false,true,bought,5L water|spring water
+Coca-Cola 2L,drinks,drinks fridge,bottle,1,2,count,Makro,false,false,bought,coke|Coca Cola
+Powerade,drinks,drinks fridge,bottle,1,3,count,Makro,false,false,bought,energy drink|sports drink
+Grape juice,drinks,drinks fridge,litre,1,1,count,Woolworths,false,true,bought,red grape juice
+Beer,drinks,drinks fridge,piece,6,6,count,Makro,false,false,bought,Castle Lite|Heineken|lager
+Wine,drinks,drinks fridge,bottle,1,2,count,Makro,false,false,bought,red wine|white wine
+Cider,drinks,drinks fridge,piece,6,0,count,Makro,false,false,bought,Savanna|Hunters
+Pringles / crisps,pantry,drinks fridge,piece,1,1,count,Makro,false,true,bought,chips|crisps|Simba
+Dishwashing liquid,cleaning & laundry,under sink,bottle,1,1,level,Makro,false,false,bought,Sunlight liquid|dish soap
+Washing powder,cleaning & laundry,under sink,kg,2,1,level,Makro,false,false,bought,Sunlight powder|laundry powder|washing liquid
+Fabric softener,cleaning & laundry,laundry,litre,2,1,level,Makro,false,false,bought,Sta-soft|softener
+Thick bleach,cleaning & laundry,under sink,bottle,1,1,count,Makro,false,false,bought,Domestos|Jik|bleach|toilet cleaner
+Handy Andy,cleaning & laundry,under sink,bottle,1,1,count,Makro,false,false,bought,cream cleaner
+Multipurpose cleaner,cleaning & laundry,under sink,bottle,1,1,count,Makro,false,false,bought,all purpose cleaner|Mr Muscle
+Oven and air fryer cleaner,cleaning & laundry,under sink,piece,1,1,count,Checkers,false,false,bought,oven cleaner
+Floor cleaner / pine gel,cleaning & laundry,under sink,litre,1,1,level,Makro,false,false,bought,pine gel|floor wash
+Hand soap refill,bathroom,under sink,litre,0.75,1,count,Checkers,false,true,bought,handwash
+Scourers and sponges,cleaning & laundry,under sink,pack,1,1,count,Spar,false,false,bought,scourer|sponge
+Cleaning cloths,cleaning & laundry,under sink,pack,1,1,count,Spar,false,false,bought,cloths
+Refuse bags,cleaning & laundry,under sink,piece,20,20,count,Makro,false,false,bought,bin bags|black bags
+Toilet paper,bathroom,bathroom,roll,18,12,count,Makro,false,true,bought,loo roll|toilet rolls
+Paper towel,cleaning & laundry,pantry,roll,2,2,count,Makro,false,true,bought,kitchen roll
+Nappies,baby & child,bathroom,piece,44,20,count,Makro,false,true,bought,diapers|Pampers|Huggies
+Wet wipes,baby & child,bathroom,pack,1,2,count,Makro,false,true,bought,wipes
+Toothpaste,bathroom,bathroom,piece,1,1,count,Checkers,false,true,bought,
+Shampoo,bathroom,bathroom,bottle,1,1,level,Checkers,false,true,bought,
+Body wash / soap,bathroom,bathroom,piece,1,2,count,Checkers,false,true,bought,soap
+Pool chlorine,pool & garden,pool shed,kg,5,0,cycle,Makro,false,false,bought,chlorine|HTH|pool chlorine granules
+Pool acid,pool & garden,pool shed,litre,5,0,cycle,Makro,false,false,bought,HCl|pool acid
+Gas bottle,utilities,garage,piece,1,1,cycle,Other,false,false,bought,LPG|gas|9kg gas
