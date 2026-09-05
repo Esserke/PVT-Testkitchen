@@ -1,7 +1,7 @@
 <script lang="ts">
   import { household, createHousehold, joinHousehold } from '../lib/household.svelte'
   import { signOut } from '../lib/auth.svelte'
-  let mode = $state<'create' | 'join'>('create')
+  let mode = $state<'create' | 'join'>('join')
   let name = $state('Our house')
   let me = $state('')
   let code = $state('')
@@ -19,7 +19,7 @@
 <div class="page">
   <p class="eyebrow">Larder</p>
   <h1>Your household</h1>
-  <p class="muted">The first person creates it. The second joins with the invite code shown in Settings.</p>
+  <p class="muted">One of you creates it. The other joins with the invite code shown under Settings on the first phone. Only create one per home.</p>
   <div class="row" style="margin-bottom:12px">
     <button class:ghost={mode !== 'create'} onclick={() => (mode = 'create')}>Create</button>
     <button class:ghost={mode !== 'join'} onclick={() => (mode = 'join')}>Join</button>

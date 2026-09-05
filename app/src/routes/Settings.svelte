@@ -1,7 +1,7 @@
 <script lang="ts">
   import { supabase, isLocalOnly } from '../lib/supabase'
   import { auth, signOut } from '../lib/auth.svelte'
-  import { household, leaveDevice } from '../lib/household.svelte'
+  import { household, leaveDevice, leaveHousehold } from '../lib/household.svelte'
   import { sync, runSync, resetCursors } from '../lib/db/sync.svelte'
 
   async function resync() {
@@ -23,6 +23,10 @@
     {/if}
     {#if isLocalOnly}
       <p class="muted">Running on this device only. Set the Supabase keys in the build to sync between phones.</p>
+    {:else}
+      <p class="muted" style="font-size:13px">Joined the wrong household? Switch to another with its invite code. A household left empty is removed.</p>
+      <button class="ghost" onclick={leaveHousehold}>Switch household</button>
+      {#if household.error}<p style="color:var(--danger)">{household.error}</p>{/if}
     {/if}
   </div>
 

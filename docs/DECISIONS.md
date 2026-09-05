@@ -32,3 +32,8 @@
 - **List window**: from today to seven days after the trip date. Plan needs and below-par needs merge into one line per item with the larger quantity; the reason shows "for meals" when the plan drove it. Automatic lines are raised, added or removed on reconcile; manual and ticked lines are never touched.
 - **Leftovers** write tomorrow's lunch as free text "Leftover <dinner>", not a recipe, so nothing is deducted twice.
 - **Fill dinners** is deterministic for now: least recently cooked, then highest rating. Claude-assisted suggestions remain Phase 5.
+
+## 2026-09-05 — Switching households
+
+- First real use showed the obvious trap: both people tap Create and end up in two households. Joining now moves you (other memberships end) and a household left with no members is removed, so an accidental empty one cleans itself up. Settings has a Switch household button calling `leave_household()`. The setup screen defaults to Join.
+- Migration `0002_switch_household.sql` must be run in the Supabase SQL editor like the first.

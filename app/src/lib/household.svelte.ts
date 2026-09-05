@@ -99,6 +99,19 @@ export async function joinHousehold(code: string, memberName: string): Promise<b
   return household.id !== null
 }
 
+// Leave the current household on the server, then show the create/join screen.
+export async function leaveHousehold(): Promise<boolean> {
+  if (!supabase) return false
+  household.error = null
+  const { error } = await supabase.rpc('leave_household')
+  if (error) {
+    household.error = error.message
+    return false
+  }
+  await leaveDevice()
+  return true
+}
+
 export async function leaveDevice(): Promise<void> {
   await clearLocalData()
   household.id = null
