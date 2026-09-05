@@ -74,13 +74,13 @@ Done when: a fridge photo produces a correct stock count for at least 8 of 10 it
 
 Goal: the tool predicts instead of just recording.
 
-- [ ] SQL views: `current_stock`, `consumption_rate` (4/8/12-week windows), `cycle_profile` (median purchase interval), `runout_forecast`
-- [ ] Running-out list on Today, sorted by days remaining, with confidence badges
-- [ ] Trip readiness: everything predicted to run out before the trip after this one is added to this trip's list with reason `predicted`
-- [ ] Cycle items setup: water, toilet paper, chlorine, washing liquid, gas — seeded with a first guess interval that the data then replaces
-- [ ] Insights screen: spend by category and shop per month; price history per item; recipe rotation; snack box variety and "came back uneaten"; waste
-- [ ] Rate-change alerts ("nappies up 40% over 8 weeks")
-- [ ] Item sparkline on detail screens
+- [x] Forecasting in the app (`domain/forecast.ts`): consumption rate over 4/8/12-week windows, median purchase interval for cycle items, run-out date with confidence. Kept in TypeScript rather than SQL views because the whole ledger is already on the phone and this works offline
+- [x] Running-out list on Today, sorted by days remaining, with confidence badges
+- [x] Trip readiness: everything predicted to run out before the trip after this one is added to this trip's list with reason `predicted`
+- [x] Cycle items setup: water, toilet paper, chlorine, washing liquid, gas — seeded with a first guess interval that the data then replaces
+- [x] Insights screen: spend by category and shop per month; price history per item; recipe rotation; snack box variety and "came back uneaten"; waste
+- [x] Rate-change alerts ("nappies up 40% over 8 weeks")
+- [x] Item sparkline on detail screens
 
 Done when: the chlorine and toilet paper predictions are within a week of reality over two cycles.
 

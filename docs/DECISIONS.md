@@ -37,3 +37,13 @@
 
 - First real use showed the obvious trap: both people tap Create and end up in two households. Joining now moves you (other memberships end) and a household left with no members is removed, so an accidental empty one cleans itself up. Settings has a Switch household button calling `leave_household()`. The setup screen defaults to Join.
 - Migration `0002_switch_household.sql` must be run in the Supabase SQL editor like the first.
+
+## 2026-09-05 — Phase 4
+
+- **Forecasts live in the app, not SQL views.** The full ledger is synced to every phone, so forecasting in TypeScript works offline and is unit-tested. Views can come later for reporting.
+- **Consumption** is every drop in derived stock: used, wasted, finished, and a count lower than the running total. Purchases and adjustments never count. Rate is over a 28-day window, widening to 56 and 84 days when there are fewer than two data points.
+- **Two methods.** Count and level items use stock divided by rate. Cycle items, and anything with no consumption logged but two or more purchases, use the median gap between purchase days from the last purchase. Confidence is by data points: 1–2 low, 3–4 medium, 5+ high.
+- **Trip readiness.** Anything forecast to run out on or before a week after the trip date is added to the list with reason `predicted`, one pack. Below-par and plan needs win over it when they overlap.
+- **Shop on purchases.** Ticking a line stores the shop name in the event note, so spend by shop is real rather than guessed from the item's usual shop.
+- **Insights** is a page rather than a tab: running out with confidence dots, changed pace (four weeks against the previous four, 30% or more), spend per month with category and shop breakdowns, recipe ruts and forgotten favourites, snack box variety and what came back, and waste with a cost guess from the last price paid. Single-hue bars with text labels; no chart library.
+- **Threw away** added to the quick sheet so waste can be logged in one tap.

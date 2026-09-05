@@ -34,8 +34,9 @@ export const markFinished = (item: Item) => recordEvent(item, 'finished', 0)
 export const setCount = (item: Item, qty: number) => recordEvent(item, 'count', qty)
 export const setLevel = (item: Item, level: number) => recordEvent(item, 'count', level)
 export const useOne = (item: Item, qty = 1) => recordEvent(item, 'used', qty)
-export const bought = (item: Item, packs: number, price: number | null = null, source: CaptureSource = 'shopping') =>
-  recordEvent(item, 'bought', packs * (item.pack_size || 1), { price_zar: price, source })
+export const bought = (item: Item, packs: number, price: number | null = null, source: CaptureSource = 'shopping', shop?: string) =>
+  recordEvent(item, 'bought', packs * (item.pack_size || 1), { price_zar: price, source, note: shop })
+export const wasted = (item: Item, qty = 1) => recordEvent(item, 'wasted', qty)
 export const produced = (item: Item, qty: number) => recordEvent(item, 'produced', qty)
 
 export const undoEvent = (id: string) => softDelete('stock_event', id)
