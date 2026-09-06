@@ -48,3 +48,9 @@ The reading function needs two GitHub repository secrets (Settings → Secrets a
 - `SUPABASE_ACCESS_TOKEN` from https://supabase.com/dashboard/account/tokens
 
 Run `supabase/migrations/0004_ai_usage.sql` in the SQL editor. The workflow `Deploy Supabase functions` then publishes the function on merge; it can also be run by hand from the Actions tab. Reads are capped at 60 per household per day; usage and an estimated cost appear under Settings.
+
+## 6. Notifications (optional)
+
+Add a third GitHub repository secret, `SUPABASE_SERVICE_ROLE_KEY`, copied from the Supabase API keys page (the `service_role` key, next to the anon key). The `Daily nudge` workflow uses it to ask the `notify` function to send anything due at 15:00 UTC. Without it the workflow skips quietly and nothing else is affected.
+
+Run `supabase/migrations/0006_push.sql` in the SQL editor, then on each phone open Settings and tap "Turn on for this phone". The phone must have the app installed to the home screen. Send a test from the same card to confirm.

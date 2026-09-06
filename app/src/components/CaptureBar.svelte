@@ -1,7 +1,7 @@
 <script lang="ts">
   // Camera entry points. Each opens the phone camera, shrinks the photo, and sends it to the reader.
   import { parse, shrinkImage, aiAvailable, type Kind, type Result, type Mode } from '../lib/ai'
-  import { LOCATIONS, CHILD_NAME } from '../lib/constants'
+  import { LOCATIONS, CHILD_NAME, PHOTO_FRIENDLY } from '../lib/constants'
   import { showToast } from '../lib/toast.svelte'
   import { refreshAiUsage } from '../lib/aiUsage.svelte'
   import ProposalSheet from './ProposalSheet.svelte'
@@ -65,8 +65,9 @@
   <div class="sheet" role="dialog" aria-label="Which shelf">
     <h2 style="margin-bottom:8px">Which shelf?</h2>
     <div class="chips">
-      {#each LOCATIONS as l (l)}<button class="ghost chip" class:on={location === l} onclick={() => (location = l)}>{l}</button>{/each}
+      {#each LOCATIONS as l (l)}<button class="ghost chip" class:on={location === l} class:dim={!PHOTO_FRIENDLY.includes(l)} onclick={() => (location = l)}>{l}</button>{/each}
     </div>
+    <p class="muted" style="font-size:12.5px;margin:8px 0 0">Faded shelves are packed or stacked, so a photo can only see the front row. It still helps, but check the numbers.</p>
     <div class="row" style="margin-top:14px"><button onclick={confirmLocation}>Open camera</button><button class="ghost" onclick={() => (askLocation = false)}>Cancel</button></div>
   </div>
 {/if}
@@ -85,4 +86,5 @@
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip { padding: 7px 11px; font-size: 13.5px; }
   .chip.on { background: var(--moss); color: #fff; border-color: var(--moss); }
+  .chip.dim { opacity: .6; }
 </style>

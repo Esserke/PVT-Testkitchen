@@ -2,3 +2,6 @@ project_id = "zmdcijdirhefmatdrujn"
 
 [functions.parse]
 verify_jwt = true
+
+[functions.notify]
+verify_jwt = false

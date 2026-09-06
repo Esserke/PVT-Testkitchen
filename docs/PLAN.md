@@ -95,8 +95,8 @@ Done when: the chlorine and toilet paper predictions are within a week of realit
 
 Goal: it fits into the house, not just the phone.
 
-- [ ] QR shelf labels: generate a printable A4 sheet of item QR codes; scanning opens the quick-action screen for that item
-- [ ] Push notifications: Sunday "plan the week", day-before-trip "list is ready", running-out alerts
+- [x] QR shelf labels: generate a printable A4 sheet of item QR codes; scanning opens the quick-action screen for that item
+- [x] Push notifications: Sunday "plan the week", day-before-trip "list is ready", running-out alerts
 - [ ] "Suggest week" and "snack box week" via Claude, using history and stock
 - [ ] Optional: WhatsApp or Telegram bot that forwards messages and photos to the parse function
 - [ ] Optional: weekly Ideas suggestions from tags you rate highly

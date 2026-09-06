@@ -6,7 +6,7 @@ import type { Item } from './db/types'
 export type Kind = 'message' | 'shelf_photo' | 'receipt' | 'plate' | 'recipe_url' | 'lunchbox' | 'child_plate'
 export interface Match { item_id: string | null; item_name: string }
 export interface MessageResult { events: (Match & { type: 'finished' | 'used' | 'bought' | 'count' | 'wasted' | 'produced'; quantity: number; note: string | null })[]; list_lines: (Match & { quantity: number })[]; unmatched: string[] }
-export interface ShelfResult { items: (Match & { quantity: number; unit: string; confidence: 'high' | 'medium' | 'low'; is_new: boolean })[] }
+export interface ShelfResult { items: (Match & { quantity: number; unit: string; confidence: 'high' | 'medium' | 'low'; partly_hidden: boolean; is_new: boolean })[]; view: 'clear' | 'crowded' }
 export interface ReceiptResult { shop: string | null; date: string | null; total: number | null; lines: (Match & { text: string; quantity: number; price: number | null; is_food_or_household: boolean })[] }
 export interface RecipeResult { title: string; servings: number | null; prep_minutes: number | null; cook_minutes: number | null; ingredients: (Match & { quantity: number | null; unit: string | null; optional: boolean })[]; steps: string; tags: string[]; notes: string | null }
 export interface LunchboxResult { items: (Match & { state: 'full' | 'partly_eaten' | 'gone' | 'untouched'; confidence: 'high' | 'medium' | 'low' })[]; notes: string | null }

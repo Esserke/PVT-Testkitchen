@@ -37,11 +37,13 @@ const MessageOut = z.object({
 const ShelfOut = z.object({
   items: z.array(z.object({
     ...Match,
-    quantity: z.number().describe("how many of the item's unit are visible"),
+    quantity: z.number().describe("how many of the item's unit you can actually SEE"),
     unit: z.string(),
     confidence: z.enum(["high", "medium", "low"]),
+    partly_hidden: z.boolean().describe("true when some of this item is behind other things, stacked, or inside an opaque container, so the real total is probably higher than what you can see"),
     is_new: z.boolean().describe("true when no catalogue item fits and this should be added"),
   })),
+  view: z.enum(["clear", "crowded"]).describe("crowded when things are stacked or overlapping so a full count is not possible from this angle"),
 });
 const ReceiptOut = z.object({
   shop: z.string().nullable(),
@@ -167,7 +169,8 @@ Deno.serve(async (req) => {
     case "shelf_photo":
       if (!body.image) return json({ error: "image required" }, 400);
       schema = ShelfOut;
-      userContent = [...image, { type: "text", text: `This is the ${body.location ?? "kitchen"}. List every catalogue item you can identify and how many units of it are visible, counting in the item's unit (for a pack, count the pack's units if you can see them, otherwise count packs x pack size). Skip things you cannot identify. Mark confidence honestly.` }];
+      userContent = [...image, { type: "text", text: `This is the ${body.location ?? "kitchen"}. List every catalogue item you can identify and how many units of it you can actually SEE, counting in the item's unit (for a pack, count the pack's units if visible, otherwise packs x pack size).
+Be honest about what the photo cannot show. Set partly_hidden to true whenever an item is stacked, standing behind something, or inside an opaque container or closed packet, because the real total is then higher than the visible count. Set view to crowded if the shelf is packed so a full count is impossible from this angle. Never guess a number for something you cannot see. Skip things you cannot identify.` }];
       break;
     case "receipt":
       if (!body.image) return json({ error: "image required" }, 400);

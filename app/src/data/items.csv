@@ -4,15 +4,15 @@ Fresh full cream milk,dairy,fridge,litre,1,2,count,Spar,false,true,bought,fresh 
 Yoghurt pots,dairy,fridge,piece,6,6,count,Woolworths,true,true,bought,yoghurt|yogurt,protein
 Cheese block,dairy,fridge,piece,1,1,level,Checkers,true,true,bought,cheddar|gouda,protein
 Butter,dairy,fridge,piece,1,1,level,Checkers,false,true,bought,,
-Eggs,fresh,pantry,piece,18,6,count,,true,true,farm,egg,protein
-Lemons,fresh,fridge,piece,1,3,count,Everfresh,false,true,bought,lemon,
+Eggs,fresh,egg basket,piece,18,6,count,,true,true,farm,egg,protein
+Lemons,fresh,fruit bowl,piece,1,3,count,Everfresh,false,true,bought,lemon,
 Cucumber,fresh,fridge,piece,1,1,count,Everfresh,true,true,bought,,veg
 Cauliflower,fresh,fridge,piece,1,0,count,Everfresh,false,true,bought,,
 Fresh herbs,fresh,fridge,pack,1,0,level,Everfresh,false,true,bought,herbs|coriander|parsley,
 Potatoes,fresh,pantry,kg,2,2,level,Everfresh,false,true,bought,potato,
 Onions,fresh,pantry,kg,1,1,level,Everfresh,false,true,bought,onion,
-Apples,fresh,fridge,piece,1,5,count,Everfresh,true,true,bought,apple,fruit
-Bananas,fresh,pantry,piece,1,5,count,Everfresh,true,true,bought,banana,fruit
+Apples,fresh,fruit bowl,piece,1,5,count,Everfresh,true,true,bought,apple,fruit
+Bananas,fresh,fruit bowl,piece,1,5,count,Everfresh,true,true,bought,banana,fruit
 Grapes,fresh,fridge,pack,1,0,level,Everfresh,true,true,bought,,fruit
 Fruit juice boxes,drinks,fridge,piece,6,6,count,Checkers,true,true,bought,juice box|Sunfirst|Liqui Fruit,drink
 Sausage / boerewors,fresh,fridge,kg,1,0,level,Everfresh,false,true,bought,wors|boerewors|sausage,
@@ -59,13 +59,13 @@ Tinned beans,pantry,pantry,tin,1,3,count,Spar,false,true,bought,baked beans|butt
 Tinned tuna,pantry,pantry,tin,1,3,count,Spar,true,true,bought,tuna,protein
 Chickpeas,pantry,pantry,tin,1,2,count,Spar,false,true,bought,,
 Chakalaka,pantry,pantry,tin,1,1,count,Spar,false,true,bought,,
-Peri-peri sauce,pantry,pantry,bottle,1,1,count,Spar,false,false,bought,Nando's|peri peri,
-Garam masala,pantry,pantry,pack,1,1,level,Spar,false,true,bought,masala,
-Chicken tikka spice,pantry,pantry,piece,1,1,level,Spar,false,true,bought,tikka,
-Cinnamon,pantry,pantry,piece,1,1,level,Woolworths,false,true,bought,,
-Braai spice / salt,pantry,pantry,piece,1,1,level,Spar,false,true,bought,spice|braai salt,
-Table salt,pantry,pantry,kg,1,1,level,Spar,false,true,bought,salt|Cerebos,
-Black pepper,pantry,pantry,piece,1,1,level,Spar,false,true,bought,pepper,
+Peri-peri sauce,pantry,spice rack,bottle,1,1,count,Spar,false,false,bought,Nando's|peri peri,
+Garam masala,pantry,spice rack,pack,1,1,level,Spar,false,true,bought,masala,
+Chicken tikka spice,pantry,spice rack,piece,1,1,level,Spar,false,true,bought,tikka,
+Cinnamon,pantry,spice rack,piece,1,1,level,Woolworths,false,true,bought,,
+Braai spice / salt,pantry,spice rack,piece,1,1,level,Spar,false,true,bought,spice|braai salt,
+Table salt,pantry,spice rack,kg,1,1,level,Spar,false,true,bought,salt|Cerebos,
+Black pepper,pantry,spice rack,piece,1,1,level,Spar,false,true,bought,pepper,
 Otees cereal,pantry,pantry,box,1,1,count,Spar,true,true,bought,Otees|Bokomo Otees,carb
 Corn flakes,pantry,pantry,box,1,1,count,Spar,false,true,bought,cornflakes,
 All Bran flakes,pantry,pantry,box,1,1,count,Spar,false,true,bought,All Bran,
@@ -127,9 +127,13 @@ Cabbage,fresh,fridge,piece,1,0,count,Everfresh,false,true,bought,sweet cabbage,
 Gravy powder,pantry,pantry,piece,1,1,level,Spar,false,true,bought,gravy|Bisto,
 Pork sausages,fresh,freezer,kg,0.5,0.5,count,Checkers,false,true,bought,bangers|sausages,
 Strawberries,fresh,fridge,pack,1,0,count,Everfresh,true,true,bought,strawberry,fruit
-Naartjies,fresh,fridge,piece,1,4,count,Everfresh,true,true,bought,naartjie|mandarin|orange,fruit
+Naartjies,fresh,fruit bowl,piece,1,4,count,Everfresh,true,true,bought,naartjie|mandarin|orange,fruit
 Fruit snacks,pantry,pantry,pack,1,4,count,Checkers,true,true,bought,Oh My Goodness|fruit gums|fruit roll|mango and carrot roll,treat
 Mini muffins,frozen,freezer,piece,6,4,count,Woolworths,true,true,bought,muffin|mini cake,treat
 Cherry tomatoes,fresh,fridge,pack,1,0,count,Everfresh,true,true,bought,baby tomatoes,veg
 Carrots,fresh,fridge,kg,1,0.5,level,Everfresh,true,true,bought,carrot|carrot sticks,veg
 Hash browns,frozen,freezer,piece,10,10,count,Checkers,false,true,bought,hash brown|rosti,
+Pears,fresh,fruit bowl,piece,1,0,count,Everfresh,true,true,bought,pear,fruit
+Avocados,fresh,fruit bowl,piece,1,0,count,Everfresh,false,true,bought,avocado|avo,
+Mixed dried herbs,pantry,spice rack,piece,1,1,level,Spar,false,true,bought,herbs|oregano|mixed herbs,
+Paprika,pantry,spice rack,piece,1,1,level,Spar,false,true,bought,,
