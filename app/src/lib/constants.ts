@@ -1,4 +1,6 @@
-export const LOCATIONS = ['pantry', 'fridge', 'freezer', 'chest freezer', 'drinks fridge', 'under sink', 'bathroom', 'laundry', 'pool shed', 'store room', 'garage'] as const
+export const LOCATIONS = ['pantry', 'fridge', 'freezer', 'chest freezer', 'drinks fridge', 'fruit bowl', 'egg basket', 'spice rack', 'under sink', 'bathroom', 'laundry', 'pool shed', 'store room', 'garage'] as const
+// Shelves where a photo can honestly see everything; deep cupboards need confirming by hand.
+export const PHOTO_FRIENDLY: readonly string[] = ['fridge', 'freezer', 'chest freezer', 'drinks fridge', 'fruit bowl', 'egg basket', 'bathroom']
 export const CATEGORIES = [
   'fresh', 'dairy', 'pantry', 'frozen', 'drinks', 'baby & child', 'bathroom',
   'cleaning & laundry', 'pool & garden', 'utilities', 'pet & farm',

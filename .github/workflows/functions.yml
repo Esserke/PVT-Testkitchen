@@ -24,3 +24,5 @@ jobs:
         run: supabase secrets set ANTHROPIC_API_KEY="${{ secrets.ANTHROPIC_API_KEY }}" --project-ref "$PROJECT_REF"
       - name: Deploy parse
         run: supabase functions deploy parse --project-ref "$PROJECT_REF"
+      - name: Deploy notify
+        run: supabase functions deploy notify --project-ref "$PROJECT_REF"

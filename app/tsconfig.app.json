@@ -4,7 +4,8 @@
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "target": "es2023",
     "module": "esnext",
-    "types": ["svelte", "vite/client"],
+    "types": ["svelte", "vite/client", "vite-plugin-pwa/client"],
+    "lib": ["ES2023", "DOM", "DOM.Iterable", "WebWorker"],
     "allowArbitraryExtensions": true,
     "noEmit": true,
     /**
@@ -17,5 +18,6 @@
     "checkJs": true,
     "moduleDetection": "force"
   },
-  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte"]
+  "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte"],
+  "exclude": ["src/sw.ts"]
 }

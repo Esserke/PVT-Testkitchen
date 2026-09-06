@@ -52,10 +52,16 @@
         const item = it.item_id ? itemsById.get(it.item_id) : undefined
         const have = item ? stockNow.get(item.id)?.stock ?? null : null
         const differs = have === null || Math.abs(have - it.quantity) > 0.001
+        const hidden = it.partly_hidden
         const detail = item
-          ? have === null ? `app: uncounted → photo: ${it.quantity} ${item.unit}` : differs ? `app: ${have} → photo: ${it.quantity} ${item.unit} (${it.quantity - have > 0 ? '+' : ''}${Math.round((it.quantity - have) * 100) / 100})` : `agrees: ${have} ${item.unit}`
+          ? hidden ? `partly hidden · saw ${it.quantity} ${item.unit}${have !== null ? `, app says ${have}` : ''}`
+            : have === null ? `app: uncounted → photo: ${it.quantity} ${item.unit}`
+            : differs ? `app: ${have} → photo: ${it.quantity} ${item.unit} (${it.quantity - have > 0 ? '+' : ''}${Math.round((it.quantity - have) * 100) / 100})`
+            : `agrees: ${have} ${item.unit}`
           : `${it.confidence} confidence · new item`
-        out.push({ key: `s${i}`, label: nameOf(it), detail, qty: it.quantity, keep: !!item && differs && it.confidence !== 'low', item, raw: it, isNew: !it.item_id })
+        // Never lower a count from a photo that could not see everything unless the user says so.
+        const wouldLower = have !== null && it.quantity < have
+        out.push({ key: `s${i}`, label: nameOf(it), detail, qty: it.quantity, keep: !!item && differs && it.confidence !== 'low' && !hidden && !(wouldLower && hidden), item, raw: it, isNew: !it.item_id })
       })
     } else if (kind === 'receipt') {
       ;(result as ReceiptResult).lines.forEach((l, i) => out.push({ key: `r${i}`, label: nameOf(l), detail: `${l.text}${l.price != null ? ` · R${l.price}` : ''}`, qty: l.quantity, keep: l.is_food_or_household && !!l.item_id, item: l.item_id ? itemsById.get(l.item_id) : undefined, raw: l, isNew: !l.item_id && l.is_food_or_household, price: l.price }))
@@ -69,8 +75,10 @@
     rows = out
   })
   const title = $derived(kind === 'message' ? 'From your note' : kind === 'shelf_photo' ? `Seen in the ${location ?? 'photo'}` : kind === 'receipt' ? `Till slip${(result as ReceiptResult).shop ? ` · ${(result as ReceiptResult).shop}` : ''}` : kind === 'lunchbox' ? (mode === 'home' ? `${CHILD_NAME}'s box came home` : `${CHILD_NAME}'s box`) : kind === 'child_plate' ? `${CHILD_NAME}'s plate · ${(result as ChildPlateResult).description}` : (result as RecipeResult).title)
-  const shelfAgree = $derived(kind === 'shelf_photo' ? rows.filter((r) => r.item && !r.detail.startsWith('app')).length : 0)
-  const shelfDiffer = $derived(kind === 'shelf_photo' ? rows.filter((r) => r.item && r.detail.startsWith('app')).length : 0)
+  const shelfAgree = $derived(kind === 'shelf_photo' ? rows.filter((r) => r.detail.startsWith('agrees')).length : 0)
+  const shelfDiffer = $derived(kind === 'shelf_photo' ? rows.filter((r) => r.detail.startsWith('app')).length : 0)
+  const shelfHidden = $derived(kind === 'shelf_photo' ? rows.filter((r) => r.detail.startsWith('partly')).length : 0)
+  const crowded = $derived(kind === 'shelf_photo' && (result as ShelfResult).view === 'crowded')
   function trustShelf(all: boolean) {
     rows = rows.map((r) => ({ ...r, keep: all ? !!r.item || r.isNew : false }))
   }
@@ -202,6 +210,11 @@
     <button class="ghost" onclick={onclose}>Close</button>
   </div>
   <p class="muted" style="font-size:13px">Untick anything wrong. Rows marked new will be added to Stock.</p>
+  {#if crowded}
+    <p class="warnbox">This shelf is packed, so the camera can only see the front row. Counts here are a floor, not a total. Correct the numbers before you apply them.</p>
+  {:else if shelfHidden}
+    <p class="warnbox">{shelfHidden} item{shelfHidden === 1 ? ' is' : 's are'} partly hidden, so the count seen is lower than the real total. Those start unticked.</p>
+  {/if}
   <div class="scroll">
     {#if rows.length === 0}
       <div class="empty">Nothing recognised. Try a closer, brighter photo.</div>
@@ -224,7 +237,7 @@
   </div>
   {#if kind === 'shelf_photo' && rows.length}
     <div class="row" style="margin-top:8px;flex-wrap:wrap">
-      <span class="muted" style="font-size:12.5px">{shelfAgree} agree · {shelfDiffer} differ</span>
+      <span class="muted" style="font-size:12.5px">{shelfAgree} agree · {shelfDiffer} differ{shelfHidden ? ` · ${shelfHidden} partly hidden` : ''}</span>
       <button class="ghost chip" onclick={() => trustShelf(true)}>Trust the shelf for all</button>
       <button class="ghost chip" onclick={() => trustShelf(false)}>Keep the app for all</button>
     </div>
@@ -268,4 +281,5 @@
   .qty { width: 70px; padding: 6px 8px; }
   .chip { padding: 6px 10px; font-size: 13px; }
   .chip.on { background: var(--moss); color: #fff; border-color: var(--moss); }
+  .warnbox { background: var(--ochre-soft); color: var(--ink); border-radius: 8px; padding: 8px 10px; font-size: 13px; margin: 8px 0 0; }
 </style>

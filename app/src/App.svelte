@@ -18,6 +18,8 @@
   import RecipeEdit from './routes/RecipeEdit.svelte'
   import Insights from './routes/Insights.svelte'
   import Faye from './routes/Faye.svelte'
+  import Labels from './routes/Labels.svelte'
+  import QuickScan from './routes/QuickScan.svelte'
   import { CHILD_NAME } from './lib/constants'
   import { watchPlan } from './lib/planState.svelte'
   import { watchChild } from './lib/childState.svelte'
@@ -40,7 +42,7 @@
   })
 
   const title = $derived(
-    route.path === 'settings' ? 'Settings' : route.path === 'item' ? 'Item' : route.path === 'recipe' ? 'Recipe' : route.path === 'insights' ? 'Insights' : route.path === 'faye' ? CHILD_NAME : route.path.charAt(0).toUpperCase() + route.path.slice(1),
+    route.path === 'settings' ? 'Settings' : route.path === 'item' ? 'Item' : route.path === 'recipe' ? 'Recipe' : route.path === 'insights' ? 'Insights' : route.path === 'faye' ? CHILD_NAME : route.path === 'labels' ? 'Labels' : route.path === 'quick' ? 'Quick' : route.path.charAt(0).toUpperCase() + route.path.slice(1),
   )
 </script>
 
@@ -71,6 +73,8 @@
     {:else if route.path === 'recipe'}<RecipeEdit />
     {:else if route.path === 'insights'}<Insights />
     {:else if route.path === 'faye'}<Faye />
+    {:else if route.path === 'labels'}<Labels />
+    {:else if route.path === 'quick'}<QuickScan />
     {/if}
   </main>
   <TabBar />

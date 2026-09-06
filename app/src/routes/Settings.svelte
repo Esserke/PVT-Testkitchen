@@ -6,6 +6,27 @@
   import { stockState } from '../lib/stockState.svelte'
   import { countDuplicates, mergeDuplicateItems } from '../lib/actions'
   import { showToast } from '../lib/toast.svelte'
+  import { go } from '../lib/router.svelte'
+  import { push, refreshPush, enablePush, disablePush, testPush } from '../lib/push.svelte'
+  $effect(() => {
+    void refreshPush()
+  })
+  async function togglePush() {
+    if (push.subscribed) {
+      await disablePush()
+      showToast('Notifications off for this phone')
+    } else if (await enablePush(household.memberName ?? 'phone')) {
+      showToast('Notifications on for this phone')
+    }
+  }
+  async function sendTest() {
+    try {
+      const r = await testPush()
+      showToast(r.sent ? `Test sent to ${r.sent} phone${r.sent === 1 ? '' : 's'}` : 'No phones are subscribed yet')
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : String(e))
+    }
+  }
   import { aiUsage, refreshAiUsage } from '../lib/aiUsage.svelte'
   import { childState } from '../lib/childState.svelte'
   import { setBudget } from '../lib/actions'
@@ -91,6 +112,28 @@
       </div>
       {#if sync.pending}<p class="muted" style="font-size:12.5px;margin-top:8px">Discard only if changes stay stuck after reopening the app. Whatever is on this phone stays; it just stops trying to send it.</p>{/if}
     {/if}
+  </div>
+
+  {#if supabase}
+    <div class="card" style="margin-bottom:12px">
+      <p class="eyebrow">Notifications</p>
+      {#if !push.supported}
+        <p class="muted" style="margin:0">This browser cannot show notifications. On a phone, install the app to the home screen first.</p>
+      {:else}
+        <p class="muted" style="font-size:13.5px">A nudge at 5pm when a town trip is tomorrow, on Sundays to plan the week, and when three or more things are low. At most one of each a day.</p>
+        <div class="row" style="flex-wrap:wrap">
+          <button onclick={togglePush} disabled={push.busy}>{push.busy ? 'Working' : push.subscribed ? 'Turn off on this phone' : 'Turn on for this phone'}</button>
+          {#if push.subscribed}<button class="ghost" onclick={sendTest}>Send a test</button>{/if}
+        </div>
+        {#if push.error}<p style="color:var(--danger);font-size:13px;margin:8px 0 0">{push.error}</p>{/if}
+      {/if}
+    </div>
+  {/if}
+
+  <div class="card" style="margin-bottom:12px">
+    <p class="eyebrow">Shelf labels</p>
+    <p class="muted" style="font-size:13.5px;margin-bottom:8px">Print QR labels for shelves and bins. Scanning one opens that item ready to tap.</p>
+    <button class="ghost" onclick={() => go('labels')}>Make labels</button>
   </div>
 
   <div class="card" style="margin-bottom:12px">
