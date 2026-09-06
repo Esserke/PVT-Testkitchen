@@ -6,6 +6,8 @@
   import { stockState, stockMap } from '../lib/stockState.svelte'
   import { formatStock, type StockStatus } from '../lib/domain/stock'
   import { importStarterCatalogue } from '../lib/seed'
+  import { countDuplicates } from '../lib/actions'
+  const duplicates = $derived(countDuplicates(stockState.items, stockState.events))
   import QuickSheet from '../components/QuickSheet.svelte'
   import StatusPill from '../components/StatusPill.svelte'
   import type { Item, TrackingMode } from '../lib/db/types'
@@ -133,6 +135,9 @@
       <p class="muted" style="margin-top:10px;font-size:13px">124 items drafted from the kitchen photos. Or add the first thing you can see in the pantry.</p>
     </div>
   {:else}
+    {#if duplicates}
+      <p class="muted" style="margin:-4px 0 12px;font-size:13.5px">{duplicates} item{duplicates === 1 ? ' appears' : 's appear'} twice. <button class="ghost" style="padding:4px 8px;font-size:13px" onclick={() => go('settings')}>Merge in Settings</button></p>
+    {/if}
     {#if imported !== null}
       <p class="muted">{imported === 0 ? 'Everything in the starter catalogue is already here.' : `Added ${imported} items.`}</p>
     {/if}

@@ -6,6 +6,8 @@
   import { belowParItems, reconcile, groupByShop, mergeNeeds } from '../lib/domain/list'
   import { planNeeds, planLines, toIsoDate, addDays } from '../lib/domain/plan'
   import { planState, ingredientsByRecipe } from '../lib/planState.svelte'
+  import { forecastMap } from '../lib/forecastState.svelte'
+  import { predictedNeeds } from '../lib/domain/forecast'
   import { newTrip, addLine, saveLine, closeTrip, bought, undoEvent } from '../lib/actions'
   import { softDelete, put } from '../lib/db/repo'
   import { showToast } from '../lib/toast.svelte'
@@ -41,7 +43,9 @@
   const today = toIsoDate(new Date())
   const window = $derived({ from: today, to: addDays(trip?.planned_date && trip.planned_date > today ? trip.planned_date : today, 7) })
   const fromPlan = $derived(planLines(planNeeds(planState.slots, new Map(planState.recipes.map((r) => [r.id, r])), ingredientsByRecipe(planState.ingredients), itemsById, window.from, window.to), itemsById, stock))
-  const needed = $derived(mergeNeeds(belowParItems(stockState.items, stock), fromPlan))
+  // Anything forecast to run out before the trip after this one goes on this trip.
+  const predicted = $derived(predictedNeeds(stockState.items, forecastMap(), window.to))
+  const needed = $derived(mergeNeeds(belowParItems(stockState.items, stock), fromPlan, predicted))
   const diff = $derived(reconcile(lines, needed))
   const grouped = $derived(groupByShop(lines.map((l) => ({ ...l, shop: l.shop ?? itemsById.get(l.item_id ?? '')?.preferred_shop ?? null }))))
   const remaining = $derived(lines.filter((l) => !l.checked).length)
@@ -78,7 +82,7 @@
     const item = l.item_id ? itemsById.get(l.item_id) : undefined
     if (!l.checked) {
       let event_id: string | null = null
-      if (item) event_id = (await bought(item, l.quantity ?? 1, l.price_paid_zar)).id
+      if (item) event_id = (await bought(item, l.quantity ?? 1, l.price_paid_zar, 'shopping', l.shop ?? item.preferred_shop ?? undefined)).id
       await saveLine({ ...l, checked: true, event_id })
     } else {
       if (l.event_id) await undoEvent(l.event_id)
@@ -163,7 +167,7 @@
             <input type="checkbox" checked={l.checked} onchange={() => toggle(l)} style="width:22px;height:22px" aria-label="Got {label(l)}" />
             <div style="flex:1">
               <div>{label(l)}</div>
-              <div class="muted" style="font-size:12.5px">{qty(l)}{l.reason === 'below_par' ? ' · low' : l.reason === 'plan' ? ' · for meals' : ''}</div>
+              <div class="muted" style="font-size:12.5px">{qty(l)}{l.reason === 'below_par' ? ' · low' : l.reason === 'plan' ? ' · for meals' : l.reason === 'predicted' ? ' · will run out' : ''}</div>
             </div>
             <input class="price mono" type="number" inputmode="decimal" min="0" step="0.01" placeholder="R" value={l.price_paid_zar ?? ''} onchange={(e) => setPrice(l, (e.currentTarget as HTMLInputElement).value)} aria-label="Price paid" />
             <button class="more" onclick={() => softDelete('list_line', l.id)} aria-label="Remove {label(l)}">×</button>

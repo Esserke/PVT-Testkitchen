@@ -2,6 +2,9 @@
   import { route, back, go } from '../lib/router.svelte'
   import { stockState, stockMap, eventsByItem } from '../lib/stockState.svelte'
   import { formatStock } from '../lib/domain/stock'
+  import { forecast, describe as describeForecast, stockHistory, todayIso } from '../lib/domain/forecast'
+  import { priceHistory } from '../lib/domain/insights'
+  import Sparkline from '../components/Sparkline.svelte'
   import { LOCATIONS, CATEGORIES, UNITS, SHOPS } from '../lib/constants'
   import { saveItem, undoEvent } from '../lib/actions'
   import { showToast } from '../lib/toast.svelte'
@@ -14,6 +17,11 @@
   const history = $derived(
     item ? (eventsByItem(stockState.events).get(item.id) ?? []).filter((e) => !e.deleted).sort((a, b) => b.at.localeCompare(a.at)).slice(0, 30) : [],
   )
+
+  const allEvents = $derived(item ? (eventsByItem(stockState.events).get(item.id) ?? []) : [])
+  const fc = $derived(item ? forecast(item, allEvents, todayIso()) : null)
+  const spark = $derived(stockHistory(allEvents, todayIso(), 56))
+  const prices = $derived(priceHistory(allEvents).slice(0, 5))
 
   let draft = $state<Item | null>(null)
   let aliasText = $state('')
@@ -58,6 +66,21 @@
         <span class="mono">{formatStock(item, stock?.stock ?? null)}</span>
         <button onclick={() => (sheet = true)}>Update</button>
       </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div class="row" style="justify-content:space-between;margin-bottom:6px">
+        <span class="eyebrow">Last 8 weeks</span>
+        {#if fc}<span class="muted" style="font-size:13px">{describeForecast(fc, item)}{fc.method !== 'none' ? ` · ${fc.confidence} confidence` : ''}</span>{/if}
+      </div>
+      {#if item.tracking_mode !== 'cycle'}<Sparkline points={spark} par={item.tracking_mode === 'count' ? item.par_level : null} />{/if}
+      {#if fc?.method === 'interval' && fc.medianIntervalDays}<p class="muted" style="font-size:13px;margin:6px 0 0">Bought about every {Math.round(fc.medianIntervalDays)} days.</p>{/if}
+      {#if prices.length}
+        <p class="eyebrow" style="margin:10px 0 4px">Prices paid</p>
+        {#each prices as p (p.at)}
+          <div class="row" style="justify-content:space-between;font-size:13.5px"><span class="muted">{new Date(p.at).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}{p.shop ? ` · ${p.shop}` : ''}</span><span class="mono">R{p.price} <span class="muted">(R{p.perUnit.toFixed(2)}/{item.unit})</span></span></div>
+        {/each}
+      {/if}
     </div>
 
     <form class="card" onsubmit={save} style="margin-bottom:16px">

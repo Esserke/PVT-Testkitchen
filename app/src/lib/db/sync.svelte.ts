@@ -10,12 +10,17 @@ import { household } from '../household.svelte'
 
 export type SyncStatus = 'local' | 'idle' | 'syncing' | 'offline' | 'error' | 'signed-out'
 
-export const sync = $state<{ status: SyncStatus; lastSync: string | null; pending: number; error: string | null }>({
+export const sync = $state<{ status: SyncStatus; lastSync: string | null; pending: number; error: string | null; dropped: number }>({
   status: supabase ? 'signed-out' : 'local',
   lastSync: null,
   pending: 0,
   error: null,
+  dropped: 0,
 })
+
+const REQUEST_TIMEOUT_MS = 20_000 // a single request on a flaky farm connection
+const STUCK_AFTER_MS = 45_000 // a run older than this is abandoned and restarted
+let runningSince = 0
 
 const PAGE = 500
 const EPOCH = '1970-01-01T00:00:00Z'
@@ -45,17 +50,18 @@ export async function runSync(): Promise<void> {
     sync.status = 'offline'
     return
   }
-  if (running) {
+  if (running && Date.now() - runningSince < STUCK_AFTER_MS) {
     scheduleSync(2000)
     return
   }
   running = true
+  runningSince = Date.now()
   sync.status = 'syncing'
   try {
     await push()
     await pull(household.id)
     sync.status = 'idle'
-    sync.error = null
+    if (!sync.dropped) sync.error = null
     sync.lastSync = new Date().toISOString()
   } catch (e) {
     sync.status = 'error'
@@ -66,6 +72,12 @@ export async function runSync(): Promise<void> {
   }
 }
 
+// Errors the server will give again on every retry: the row can never be accepted as it is.
+function isPermanent(error: { code?: string; message: string }): boolean {
+  const c = error.code ?? ''
+  return c === '23503' || c === '42501' || c === '23514' || c === '22P02' || c === 'PGRST204' || /violates|permission|policy|invalid input/i.test(error.message)
+}
+
 async function push(): Promise<void> {
   if (!supabase) return
   const entries = await db.outbox.orderBy('ts').toArray()
@@ -74,13 +86,29 @@ async function push(): Promise<void> {
   for (const e of entries) byTable.set(e.table, [...(byTable.get(e.table) ?? []), e])
 
   for (const [table, list] of byTable) {
+    const ids = list.map((e) => e.id!).filter((id) => id !== undefined)
     const rows = (await Promise.all(list.map((e) => db.synced(table).get(e.row_id)))).filter(Boolean)
-    for (let i = 0; i < rows.length; i += 200) {
-      const chunk = rows.slice(i, i + 200)
-      const { error } = await supabase.from(table).upsert(chunk, { onConflict: 'id' })
-      if (error) throw new Error(`${table}: ${error.message}`)
+    // Rows from a household this phone has left can never sync; let them go.
+    const mine = rows.filter((r) => r.household_id === household.id)
+    if (mine.length < rows.length) sync.dropped += rows.length - mine.length
+
+    for (let i = 0; i < mine.length; i += 200) {
+      const chunk = mine.slice(i, i + 200)
+      const { error } = await supabase.from(table).upsert(chunk, { onConflict: 'id' }).abortSignal(AbortSignal.timeout(REQUEST_TIMEOUT_MS))
+      if (!error) continue
+      if (!isPermanent(error)) throw new Error(`${table}: ${error.message}`)
+      // One bad row must not block the rest: retry singly and drop the ones the server refuses.
+      for (const row of chunk) {
+        const single = await supabase.from(table).upsert(row, { onConflict: 'id' }).abortSignal(AbortSignal.timeout(REQUEST_TIMEOUT_MS))
+        if (single.error && isPermanent(single.error)) {
+          sync.dropped += 1
+          sync.error = `${table}: ${single.error.message}`
+        } else if (single.error) {
+          throw new Error(`${table}: ${single.error.message}`)
+        }
+      }
     }
-    await db.outbox.bulkDelete(list.map((e) => e.id!).filter((id) => id !== undefined))
+    await db.outbox.bulkDelete(ids)
   }
 }
 
@@ -97,6 +125,7 @@ async function pull(householdId: string): Promise<void> {
         .gt('updated_at', cursor)
         .order('updated_at', { ascending: true })
         .limit(PAGE)
+        .abortSignal(AbortSignal.timeout(REQUEST_TIMEOUT_MS))
       if (error) throw new Error(`${table}: ${error.message}`)
       if (!data || data.length === 0) break
       const pendingIds = new Set((await db.outbox.where('table').equals(table).toArray()).map((e) => e.row_id))
@@ -111,6 +140,14 @@ async function pull(householdId: string): Promise<void> {
 
 export async function resetCursors(): Promise<void> {
   await db.meta.where('key').startsWith('cursor.').delete()
+}
+
+// Escape hatch: forget every change waiting to be sent. The rows stay on this phone.
+export async function discardPending(): Promise<void> {
+  await db.outbox.clear()
+  sync.dropped = 0
+  sync.error = null
+  await refreshPending()
 }
 
 // Called once the household is known. Wires up online/visibility/interval and realtime.

@@ -3,6 +3,8 @@
 import csv from '../data/items.csv?raw'
 import { db } from './db/schema'
 import { put, newId } from './db/repo'
+import { supabase } from './supabase'
+import { sync, runSync } from './db/sync.svelte'
 import type { Item, ItemSource, SnackComponent, TrackingMode } from './db/types'
 
 function parseCsv(text: string): Record<string, string>[] {
@@ -42,6 +44,7 @@ export function starterCatalogue(householdId: string): Item[] {
 
 // Adds every catalogue item whose name is not already present. Returns how many were added.
 export async function importStarterCatalogue(householdId: string): Promise<number> {
+  if (supabase && !sync.lastSync) await runSync()
   const existing = new Set(
     (await db.item.where('household_id').equals(householdId).toArray()).map((i) => i.name.toLowerCase()),
   )

@@ -5,12 +5,15 @@
   import { go } from '../lib/router.svelte'
   import { stockState, stockMap } from '../lib/stockState.svelte'
   import { formatStock } from '../lib/domain/stock'
+  import { forecastMap } from '../lib/forecastState.svelte'
+  import { describe as describeForecast } from '../lib/domain/forecast'
   import { markFinished, undoEvent, captureText, saveCapture } from '../lib/actions'
   import { showToast } from '../lib/toast.svelte'
   import QuickSheet from '../components/QuickSheet.svelte'
   import type { Capture, Item } from '../lib/db/types'
   import { planState, slotAt } from '../lib/planState.svelte'
   import { SLOTS, toIsoDate, slotsForDay } from '../lib/domain/plan'
+  import { CHILD_NAME } from '../lib/constants'
 
   const todayIso = toIsoDate(new Date())
   const itemsById = $derived(new Map(stockState.items.map((i) => [i.id, i])))
@@ -34,8 +37,14 @@
       .sort((a, b) => (b.s?.touches ?? 0) - (a.s?.touches ?? 0) || (b.item.par_level ?? 0) - (a.item.par_level ?? 0) || a.item.name.localeCompare(b.item.name))
       .slice(0, 20)
   })
+  // Low or out now, plus anything forecast to run out within two weeks, soonest first.
+  const forecasts = $derived(forecastMap())
   const runningOut = $derived(
-    active.map((i) => ({ item: i, s: stock.get(i.id) })).filter(({ s }) => s && (s.status === 'out' || s.status === 'low')).slice(0, 8),
+    active
+      .map((i) => ({ item: i, s: stock.get(i.id), f: forecasts.get(i.id) }))
+      .filter(({ s, f }) => (s && (s.status === 'out' || s.status === 'low')) || (f && f.daysLeft !== null && f.daysLeft <= 14 && f.confidence !== 'none'))
+      .sort((a, b) => (a.f?.daysLeft ?? (a.s?.status === 'out' ? 0 : 7)) - (b.f?.daysLeft ?? (b.s?.status === 'out' ? 0 : 7)))
+      .slice(0, 8),
   )
 
   let sheetItem = $state<Item | null>(null)
@@ -93,7 +102,7 @@
   <div class="card" style="padding:4px 12px;margin-bottom:18px">
     {#each meals as m (m.slot)}
       <div class="row meal" class:box={m.slot === 'school_snackbox'}>
-        <span class="lbl">{m.label}</span>
+        <span class="lbl">{m.slot === 'school_snackbox' ? `${CHILD_NAME}'s box` : m.label}</span>
         <span style="flex:1" class:muted={!m.txt || m.done}>{m.txt || '—'}</span>
         {#if m.done}<span class="pill">✓</span>{/if}
       </div>
@@ -103,18 +112,24 @@
   {#if runningOut.length}
     <div class="row" style="justify-content:space-between;margin-bottom:6px">
       <p class="eyebrow" style="margin:0">Running out</p>
-      <button class="ghost" style="padding:6px 10px;font-size:13px" onclick={() => go('shop')}>Open list</button>
+      <span class="row">
+        <button class="ghost" style="padding:6px 10px;font-size:13px" onclick={() => go('insights')}>Insights</button>
+        <button class="ghost" style="padding:6px 10px;font-size:13px" onclick={() => go('shop')}>Open list</button>
+      </span>
     </div>
     <div class="card" style="padding:6px 12px;margin-bottom:18px">
-      {#each runningOut as { item, s } (item.id)}
+      {#each runningOut as { item, s, f } (item.id)}
         <div class="row" style="justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--rule-soft)">
           <button class="link" onclick={() => go('item', item.id)}>{item.name}</button>
-          <span class="mono muted" style="font-size:13px">{formatStock(item, s?.stock ?? null)}</span>
+          <span class="muted" style="font-size:13px">{f && f.method !== 'none' ? describeForecast(f, item) : formatStock(item, s?.stock ?? null)}</span>
         </div>
       {/each}
     </div>
   {/if}
 
+  {#if !runningOut.length}
+    <p style="text-align:right;margin:-6px 0 8px"><button class="ghost" style="padding:6px 10px;font-size:13px" onclick={() => go('insights')}>Insights</button></p>
+  {/if}
   <p class="eyebrow" style="margin-bottom:6px">Tap when finished</p>
   {#if !stockState.ready}
     <div class="empty">Loading</div>

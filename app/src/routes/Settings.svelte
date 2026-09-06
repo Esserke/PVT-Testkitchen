@@ -2,7 +2,19 @@
   import { supabase, isLocalOnly } from '../lib/supabase'
   import { auth, signOut } from '../lib/auth.svelte'
   import { household, leaveDevice, leaveHousehold } from '../lib/household.svelte'
-  import { sync, runSync, resetCursors } from '../lib/db/sync.svelte'
+  import { sync, runSync, resetCursors, discardPending } from '../lib/db/sync.svelte'
+  import { stockState } from '../lib/stockState.svelte'
+  import { countDuplicates, mergeDuplicateItems } from '../lib/actions'
+  import { showToast } from '../lib/toast.svelte'
+
+  const duplicates = $derived(countDuplicates(stockState.items, stockState.events))
+  let merging = $state(false)
+  async function merge() {
+    merging = true
+    const n = await mergeDuplicateItems(stockState.items, stockState.events)
+    merging = false
+    showToast(n ? `${n} duplicate${n === 1 ? '' : 's'} merged` : 'No duplicates found')
+  }
 
   async function resync() {
     await resetCursors()
@@ -30,16 +42,27 @@
     {/if}
   </div>
 
+  {#if duplicates}
+    <div class="card" style="margin-bottom:12px;border-color:var(--ochre)">
+      <p class="eyebrow">Duplicates</p>
+      <p>{duplicates} item{duplicates === 1 ? ' appears' : 's appear'} twice in Stock, usually because both phones loaded the starter catalogue. Merging keeps the copy with history and moves everything else onto it.</p>
+      <button onclick={merge} disabled={merging}>{merging ? 'Merging' : `Merge ${duplicates} duplicate${duplicates === 1 ? '' : 's'}`}</button>
+    </div>
+  {/if}
+
   <div class="card" style="margin-bottom:12px">
     <p class="eyebrow">Sync</p>
     <p>Status: <b>{sync.status}</b>{#if sync.pending} · {sync.pending} change{sync.pending === 1 ? '' : 's'} waiting{/if}</p>
     {#if sync.lastSync}<p class="muted">Last synced {new Date(sync.lastSync).toLocaleTimeString()}</p>{/if}
     {#if sync.error}<p style="color:var(--danger)">{sync.error}</p>{/if}
+    {#if sync.dropped}<p class="muted" style="font-size:13px">{sync.dropped} change{sync.dropped === 1 ? '' : 's'} could not be sent and {sync.dropped === 1 ? 'was' : 'were'} set aside. Usually these belong to a household this phone has left.</p>{/if}
     {#if supabase}
-      <div class="row">
+      <div class="row" style="flex-wrap:wrap">
         <button onclick={runSync}>Sync now</button>
         <button class="ghost" onclick={resync}>Full re-pull</button>
+        {#if sync.pending}<button class="ghost" onclick={discardPending}>Discard {sync.pending} waiting</button>{/if}
       </div>
+      {#if sync.pending}<p class="muted" style="font-size:12.5px;margin-top:8px">Discard only if changes stay stuck after reopening the app. Whatever is on this phone stays; it just stops trying to send it.</p>{/if}
     {/if}
   </div>
 

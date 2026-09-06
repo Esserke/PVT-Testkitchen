@@ -2,7 +2,7 @@
   import type { Item } from '../lib/db/types'
   import type { ItemStock } from '../lib/domain/stock'
   import { LEVELS, formatStock } from '../lib/domain/stock'
-  import { markFinished, setCount, setLevel, useOne, bought, produced, undoEvent } from '../lib/actions'
+  import { markFinished, setCount, setLevel, useOne, bought, produced, wasted, undoEvent } from '../lib/actions'
   import { showToast } from '../lib/toast.svelte'
 
   let { item, stock, onclose }: { item: Item; stock: ItemStock | undefined; onclose: () => void } = $props()
@@ -40,6 +40,7 @@
       <button class="danger" onclick={() => done(`${item.name} finished`, markFinished(item))}>Finished</button>
       <button class="ghost" onclick={() => done(`Used 1 ${item.unit} of ${item.name}`, useOne(item))}>Used 1 {item.unit}</button>
     </div>
+    <button class="ghost" style="width:100%;margin-bottom:10px" onclick={() => done(`Threw away 1 ${item.unit} of ${item.name}`, wasted(item))}>Threw away 1 {item.unit}</button>
     <p class="eyebrow" style="margin:6px 0">Count what is there</p>
     <div class="row">
       <input type="number" min="0" step="any" inputmode="decimal" bind:value={count} aria-label="Count" />

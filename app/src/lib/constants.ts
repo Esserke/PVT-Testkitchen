@@ -5,3 +5,13 @@ export const CATEGORIES = [
 ] as const
 export const UNITS = ['piece', 'pack', 'roll', 'litre', 'kg', 'bottle', 'bag', 'box', 'tin'] as const
 export const SHOPS = ['Woolworths', 'Checkers', 'Spar', 'Everfresh', 'Other'] as const
+
+// The child the school snack box is packed for.
+export const CHILD_NAME = 'Faye'
+// How the three-compartment box is filled: fresh things, the main bite, a treat. Drinks are optional extras.
+export const COMPARTMENTS = [
+  { label: 'Fresh', components: ['fruit', 'veg'] },
+  { label: 'Main', components: ['carb', 'protein'] },
+  { label: 'Treat', components: ['treat'] },
+] as const
+export const AUTO_FILL_COMPONENTS = ['fruit', 'veg', 'carb', 'protein', 'treat'] as const

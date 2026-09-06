@@ -102,9 +102,12 @@ export interface MealSlot extends Synced {
   servings: number | null
   for_members: string[]
   item_ids: string[]
+  item_verdicts: Record<string, Verdict>
   status: 'planned' | 'cooked' | 'skipped' | 'swapped'
   notes: string | null
 }
+
+export type Verdict = 'ate' | 'some' | 'left'
 
 export interface Trip extends Synced {
   planned_date: string | null
