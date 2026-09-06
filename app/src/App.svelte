@@ -20,6 +20,7 @@
   import Faye from './routes/Faye.svelte'
   import { CHILD_NAME } from './lib/constants'
   import { watchPlan } from './lib/planState.svelte'
+  import { watchChild } from './lib/childState.svelte'
   import Toast from './components/Toast.svelte'
   import { watchStock } from './lib/stockState.svelte'
 
@@ -35,6 +36,7 @@
     const id = supabase && !auth.session ? null : household.id
     watchStock(id)
     watchPlan(id)
+    watchChild(id)
   })
 
   const title = $derived(

@@ -1,7 +1,7 @@
 // The verbs of the app. Each writes one or more ledger rows through the repo.
 import { put, newId, nowIso, softDelete } from './db/repo'
 import { household } from './household.svelte'
-import type { Capture, CaptureSource, Idea, Item, ListLine, MealSlot, MealSlotName, Recipe, RecipeIngredient, StockEvent, StockEventType, Trip, Verdict } from './db/types'
+import type { Budget, Capture, CaptureSource, ChildMeal, ChildMetric, Eaten, Idea, Item, ListLine, MealSlot, MealSlotName, Recipe, RecipeIngredient, StockEvent, StockEventType, Trip, Verdict } from './db/types'
 import { cookedDeductions, addDays } from './domain/plan'
 import { planDedupe, repointEvents, repointIngredients, repointLines, repointSlots } from './domain/dedupe'
 import { db } from './db/schema'
@@ -146,4 +146,29 @@ export async function mergeDuplicateItems(items: Item[], events: StockEvent[]): 
   for (const s of repointSlots(slots, plan.keepers)) await put('meal_slot', s)
   for (const dup of plan.remove) await put('item', { ...dup, deleted: true })
   return plan.remove.length
+}
+
+
+// ------------------------------------------------------------ the child's record
+export async function newChildMeal(date: string, slot: MealSlotName, patch: Partial<ChildMeal>): Promise<ChildMeal> {
+  return put('child_meal', { ...base(), date, slot, description: null, item_ids: [], eaten: null, fruit_veg: 0, protein: false, notes: null, at: nowIso(), ...patch })
+}
+export const saveChildMeal = (m: ChildMeal) => put('child_meal', m)
+export const setChildMealEaten = (m: ChildMeal, eaten: Eaten | null) => put('child_meal', { ...m, eaten })
+export const deleteChildMeal = (id: string) => softDelete('child_meal', id)
+export async function addChildMetric(date: string, kind: ChildMetric['kind'], value: number | null, text_value: string | null = null): Promise<ChildMetric> {
+  return put('child_metric', { ...base(), date, kind, value, text_value })
+}
+export const deleteChildMetric = (id: string) => softDelete('child_metric', id)
+
+// ------------------------------------------------------------ budget and receipts
+export async function setBudget(existing: Budget | undefined, category: string, monthly_zar: number): Promise<Budget> {
+  return put('budget', { ...(existing ?? { ...base(), category }), monthly_zar })
+}
+// A till slip is kept as a confirmed capture so the expense record shows the slip total, not only catalogue lines.
+export async function saveReceiptRecord(shop: string | null, date: string | null, total: number | null, lineCount: number): Promise<Capture> {
+  return put('capture', {
+    ...base(), kind: 'receipt', raw_text: `${shop ?? 'Shop'} · ${date ?? nowIso().slice(0, 10)} · ${lineCount} lines`, photo_path: null, location: null,
+    proposed: { shop, date, total }, status: 'confirmed', created_at: date ? `${date}T12:00:00.000Z` : nowIso(), by_member: household.memberId,
+  })
 }

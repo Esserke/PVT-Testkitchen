@@ -80,11 +80,20 @@ const LunchboxOut = z.object({
   notes: z.string().nullable().describe("anything worth telling the parents, one short sentence"),
 });
 
-type Kind = "message" | "shelf_photo" | "receipt" | "plate" | "recipe_url" | "lunchbox";
+const ChildPlateOut = z.object({
+  description: z.string().describe("what is on the plate in one short line, e.g. 'scrambled egg, toast, cucumber'"),
+  items: z.array(z.object({ ...Match, confidence: z.enum(["high", "medium", "low"]) })),
+  eaten: z.enum(["all", "most", "some", "little", "none"]).nullable().describe("only for an after photo: how much of the food is gone"),
+  fruit_veg: z.number().int().describe("number of distinct fruit or vegetable items on the plate"),
+  protein: z.boolean().describe("true if there is a clear protein: egg, meat, fish, cheese, yoghurt, beans"),
+  notes: z.string().nullable().describe("one short observation for the parents, or null"),
+});
+
+type Kind = "message" | "shelf_photo" | "receipt" | "plate" | "recipe_url" | "lunchbox" | "child_plate";
 interface CatalogueItem { id: string; name: string; aliases: string[]; unit: string; pack_size: number; location: string; stock: number | null }
 interface Body {
   kind: Kind;
-  mode?: "packed" | "home";
+  mode?: "packed" | "home" | "before" | "after";
   text?: string;
   url?: string;
   location?: string;
@@ -176,6 +185,13 @@ Deno.serve(async (req) => {
       userContent = [...image, { type: "text", text: body.mode === "home"
         ? "This is a child's school snack box that has just come home. For each food you can identify, say whether it is gone, partly eaten, or untouched. Match to catalogue items marked for the snack box where you can. Leftover packaging with no food counts as gone."
         : "This is a child's school snack box being packed. List each food in it, matched to catalogue items where you can. State is full for everything." }];
+      break;
+    case "child_plate":
+      if (!body.image) return json({ error: "image required" }, 400);
+      schema = ChildPlateOut;
+      userContent = [...image, { type: "text", text: body.mode === "after"
+        ? "This is a young child's plate after eating. Describe what was served, match foods to catalogue items where you can, and judge how much of the food has been eaten: all, most, some, little or none. Count distinct fruit and vegetable items and say whether a protein is present."
+        : "This is a young child's plate before eating. Describe what is on it, match foods to catalogue items where you can, count distinct fruit and vegetable items and say whether a protein is present. Leave eaten null." }];
       break;
     case "recipe_url": {
       if (!body.url) return json({ error: "url required" }, 400);

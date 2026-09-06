@@ -6,6 +6,19 @@
   import { eventsByItem } from '../lib/stockState.svelte'
   import { spendByMonth, recipeRotation, snackVariety, cameBack, waste } from '../lib/domain/insights'
   import { go, back } from '../lib/router.svelte'
+  import { childState } from '../lib/childState.svelte'
+  import { budgetStatus, slipRecords } from '../lib/domain/budget'
+  import { liveQuery } from 'dexie'
+  import { db } from '../lib/db/schema'
+  import { household } from '../lib/household.svelte'
+  import type { Capture } from '../lib/db/types'
+  let captures = $state<Capture[]>([])
+  $effect(() => {
+    const id = household.id
+    if (!id) return
+    const sub = liveQuery(() => db.capture.where('household_id').equals(id).toArray()).subscribe((r) => (captures = r))
+    return () => sub.unsubscribe()
+  })
 
   const today = todayIso()
   const itemsById = $derived(new Map(stockState.items.map((i) => [i.id, i])))
@@ -34,6 +47,8 @@
   const variety = $derived(snackVariety(planState.slots, today, 4))
   const returned = $derived(cameBack(planState.slots, today))
   const thrown = $derived(waste(stockState.events, itemsById, today))
+  const budget = $derived(budgetStatus(childState.budgets, stockState.events, itemsById, today))
+  const slips = $derived(slipRecords(captures, today, 3))
 
   const rand = (n: number) => `R${Math.round(n).toLocaleString('en-ZA')}`
   const monthName = (m: string) => new Date(m + '-01').toLocaleDateString(undefined, { month: 'short' })
@@ -72,6 +87,37 @@
       <p class="muted" style="font-size:12px;margin-top:6px">Last four weeks against the four before.</p>
     </section>
   {/if}
+
+  <section>
+    <p class="eyebrow">Budget · this month</p>
+    {#if !budget.total && !budget.lines.length}
+      <div class="empty">Set a monthly budget under Settings and spend is tracked against it here.</div>
+    {:else}
+      <div class="card">
+        {#if budget.total}
+          <div class="row" style="justify-content:space-between;font-size:14px"><span>Whole house</span><span class="mono">{rand(budget.total.spent)} of {rand(budget.total.budget)}</span></div>
+          <div class="track big"><div class="hfill" class:over={budget.total.projected > budget.total.budget} style="width:{Math.min(100, budget.total.share * 100)}%"></div></div>
+          <p class="muted" style="font-size:12.5px;margin:4px 0 10px">On this pace the month ends near {rand(budget.total.projected)}{budget.total.projected > budget.total.budget ? ', over budget' : ''}.</p>
+        {/if}
+        {#each budget.lines as l (l.category)}
+          <div class="hrow"><span>{l.category}</span><div class="track"><div class="hfill" class:over={l.projected > l.budget} style="width:{Math.min(100, l.share * 100)}%"></div></div><span class="mono">{rand(l.spent)}/{rand(l.budget)}</span></div>
+        {/each}
+      </div>
+    {/if}
+  </section>
+
+  <section>
+    <p class="eyebrow">Till slips · last 3 months</p>
+    {#if slips.length === 0}
+      <div class="empty">Photograph a till slip from Today and it is kept here with its total.</div>
+    {:else}
+      <div class="card" style="padding:0 12px">
+        {#each slips as sl (sl.id)}
+          <div class="row line"><span class="muted" style="font-size:12.5px;width:64px">{new Date(sl.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}</span><span style="flex:1">{sl.shop}</span><span class="muted" style="font-size:12px">{sl.lines} lines</span><span class="mono">{sl.total != null ? rand(sl.total) : '—'}</span></div>
+        {/each}
+      </div>
+    {/if}
+  </section>
 
   <section>
     <p class="eyebrow">Spend</p>
@@ -168,4 +214,6 @@
   .track { height: 8px; background: var(--rule-soft); border-radius: 4px; overflow: hidden; }
   .hfill { height: 100%; background: var(--moss); border-radius: 4px; }
   .hfill.ochre { background: var(--ochre); }
+  .hfill.over { background: var(--danger); }
+  .track.big { height: 12px; margin-top: 6px; }
 </style>

@@ -1,6 +1,9 @@
 <script lang="ts">
   // Shows what the reader proposed and applies only the rows the user keeps.
-  import type { Kind, Result, MessageResult, ShelfResult, ReceiptResult, RecipeResult, LunchboxResult } from '../lib/ai'
+  import type { Kind, Result, MessageResult, ShelfResult, ReceiptResult, RecipeResult, LunchboxResult, ChildPlateResult, Mode } from '../lib/ai'
+  import { stockMap, stockState as ss } from '../lib/stockState.svelte'
+  import { childState } from '../lib/childState.svelte'
+  import { newChildMeal, saveChildMeal, saveReceiptRecord } from '../lib/actions'
   import { stockState } from '../lib/stockState.svelte'
   import { planState } from '../lib/planState.svelte'
   import { recordEvent, bought, newTrip, addLine, saveRecipe, saveIngredient, blankIngredient, upsertSlot, cookSlot, saveSlot } from '../lib/actions'
@@ -15,7 +18,8 @@
   import { go } from '../lib/router.svelte'
   import type { Item, Trip } from '../lib/db/types'
 
-  let { kind, result, location = null, mode = 'packed', onclose, ondone }: { kind: Kind; result: Result; location?: string | null; mode?: 'packed' | 'home'; onclose: () => void; ondone?: () => void } = $props()
+  let { kind, result, location = null, mode = 'packed', onclose, ondone }: { kind: Kind; result: Result; location?: string | null; mode?: Mode; onclose: () => void; ondone?: () => void } = $props()
+  const stockNow = $derived(stockMap(ss.items, ss.events))
   const today = toIsoDate(new Date())
   // Plate photos also log the meal: which slot, how many plates, and whether it was cooked now.
   const hour = new Date().getHours()
@@ -43,9 +47,20 @@
       r.events.forEach((e, i) => out.push({ key: `e${i}`, label: nameOf(e), detail: e.type === 'finished' ? 'finished' : `${e.type} ${e.quantity}`, qty: e.quantity, keep: !!e.item_id, item: e.item_id ? itemsById.get(e.item_id) : undefined, raw: e, isNew: !e.item_id }))
       r.list_lines.forEach((l, i) => out.push({ key: `l${i}`, label: nameOf(l), detail: `add to list ×${l.quantity}`, qty: l.quantity, keep: true, item: l.item_id ? itemsById.get(l.item_id) : undefined, raw: l, isNew: !l.item_id }))
     } else if (kind === 'shelf_photo') {
-      ;(result as ShelfResult).items.forEach((it, i) => out.push({ key: `s${i}`, label: nameOf(it), detail: `${it.confidence} confidence${it.is_new ? ' · new item' : ''}`, qty: it.quantity, keep: it.confidence !== 'low' && !!it.item_id, item: it.item_id ? itemsById.get(it.item_id) : undefined, raw: it, isNew: !it.item_id }))
+      // A stock take: compare what the app believes with what the photo shows. Only differences start ticked.
+      ;(result as ShelfResult).items.forEach((it, i) => {
+        const item = it.item_id ? itemsById.get(it.item_id) : undefined
+        const have = item ? stockNow.get(item.id)?.stock ?? null : null
+        const differs = have === null || Math.abs(have - it.quantity) > 0.001
+        const detail = item
+          ? have === null ? `app: uncounted → photo: ${it.quantity} ${item.unit}` : differs ? `app: ${have} → photo: ${it.quantity} ${item.unit} (${it.quantity - have > 0 ? '+' : ''}${Math.round((it.quantity - have) * 100) / 100})` : `agrees: ${have} ${item.unit}`
+          : `${it.confidence} confidence · new item`
+        out.push({ key: `s${i}`, label: nameOf(it), detail, qty: it.quantity, keep: !!item && differs && it.confidence !== 'low', item, raw: it, isNew: !it.item_id })
+      })
     } else if (kind === 'receipt') {
       ;(result as ReceiptResult).lines.forEach((l, i) => out.push({ key: `r${i}`, label: nameOf(l), detail: `${l.text}${l.price != null ? ` · R${l.price}` : ''}`, qty: l.quantity, keep: l.is_food_or_household && !!l.item_id, item: l.item_id ? itemsById.get(l.item_id) : undefined, raw: l, isNew: !l.item_id && l.is_food_or_household, price: l.price }))
+    } else if (kind === 'child_plate') {
+      ;(result as ChildPlateResult).items.forEach((it, i) => out.push({ key: `p${i}`, label: nameOf(it), detail: `${it.confidence} confidence`, qty: null, keep: !!it.item_id, item: it.item_id ? itemsById.get(it.item_id) : undefined, raw: it, isNew: false }))
     } else if (kind === 'lunchbox') {
       ;(result as LunchboxResult).items.forEach((it, i) => out.push({ key: `b${i}`, label: nameOf(it), detail: mode === 'home' ? (it.state === 'gone' ? 'gone → ate' : it.state === 'partly_eaten' ? 'partly eaten → some' : 'untouched → left') : `${it.confidence} confidence`, qty: null, keep: !!it.item_id && it.confidence !== 'low', item: it.item_id ? itemsById.get(it.item_id) : undefined, raw: it, isNew: false }))
     } else {
@@ -53,7 +68,18 @@
     }
     rows = out
   })
-  const title = $derived(kind === 'message' ? 'From your note' : kind === 'shelf_photo' ? `Seen in the ${location ?? 'photo'}` : kind === 'receipt' ? `Till slip${(result as ReceiptResult).shop ? ` · ${(result as ReceiptResult).shop}` : ''}` : kind === 'lunchbox' ? (mode === 'home' ? `${CHILD_NAME}'s box came home` : `${CHILD_NAME}'s box`) : (result as RecipeResult).title)
+  const title = $derived(kind === 'message' ? 'From your note' : kind === 'shelf_photo' ? `Seen in the ${location ?? 'photo'}` : kind === 'receipt' ? `Till slip${(result as ReceiptResult).shop ? ` · ${(result as ReceiptResult).shop}` : ''}` : kind === 'lunchbox' ? (mode === 'home' ? `${CHILD_NAME}'s box came home` : `${CHILD_NAME}'s box`) : kind === 'child_plate' ? `${CHILD_NAME}'s plate · ${(result as ChildPlateResult).description}` : (result as RecipeResult).title)
+  const shelfAgree = $derived(kind === 'shelf_photo' ? rows.filter((r) => r.item && !r.detail.startsWith('app')).length : 0)
+  const shelfDiffer = $derived(kind === 'shelf_photo' ? rows.filter((r) => r.item && r.detail.startsWith('app')).length : 0)
+  function trustShelf(all: boolean) {
+    rows = rows.map((r) => ({ ...r, keep: all ? !!r.item || r.isNew : false }))
+  }
+  let childSlot = $state<MealSlotName>(hour < 10.5 ? 'breakfast' : hour < 15 ? 'lunch' : 'dinner')
+  let childEaten = $state<'all' | 'most' | 'some' | 'little' | 'none' | null>(null)
+  $effect(() => {
+    if (kind === 'child_plate') childEaten = (result as ChildPlateResult).eaten ?? null
+  })
+  const EATEN = ['all', 'most', 'some', 'little', 'none'] as const
   const kept = $derived(rows.filter((r) => r.keep))
 
   async function ensureItem(name: string, unit = 'piece'): Promise<Item> {
@@ -96,6 +122,23 @@
           await bought(item, r.qty ?? 1, r.price ?? null, 'shopping', rr.shop ?? undefined)
           n++
         }
+        await saveReceiptRecord(rr.shop, rr.date, rr.total, rr.lines.length)
+      } else if (kind === 'child_plate') {
+        const rr = result as ChildPlateResult
+        const ids = kept.map((r) => r.item?.id).filter((x): x is string => !!x)
+        if (mode === 'after') {
+          // Attach the verdict to today's most recent meal without one, else record a new meal.
+          const open = childState.meals.find((m) => m.date === today && !m.eaten)
+          if (open) await saveChildMeal({ ...open, eaten: childEaten, item_ids: [...new Set([...open.item_ids, ...ids])], notes: rr.notes ?? open.notes })
+          else await newChildMeal(today, childSlot, { description: rr.description, item_ids: ids, eaten: childEaten, fruit_veg: rr.fruit_veg, protein: rr.protein, notes: rr.notes })
+        } else {
+          await newChildMeal(today, childSlot, { description: rr.description, item_ids: ids, fruit_veg: rr.fruit_veg, protein: rr.protein, notes: rr.notes })
+        }
+        n = 1
+        showToast(mode === 'after' ? `${CHILD_NAME}: ${childEaten ?? 'noted'}` : `${CHILD_NAME}'s ${childSlot} logged`)
+        onclose()
+        ondone?.()
+        return
       } else if (kind === 'lunchbox') {
         const existing = slotAt(planState.slots, today, 'school_snackbox')
         if (mode === 'home') {
@@ -179,6 +222,24 @@
       <p class="muted" style="font-size:12.5px;margin-top:8px">Not understood: {(result as MessageResult).unmatched.join(' · ')}</p>
     {/if}
   </div>
+  {#if kind === 'shelf_photo' && rows.length}
+    <div class="row" style="margin-top:8px;flex-wrap:wrap">
+      <span class="muted" style="font-size:12.5px">{shelfAgree} agree · {shelfDiffer} differ</span>
+      <button class="ghost chip" onclick={() => trustShelf(true)}>Trust the shelf for all</button>
+      <button class="ghost chip" onclick={() => trustShelf(false)}>Keep the app for all</button>
+    </div>
+  {/if}
+  {#if kind === 'child_plate'}
+    <div class="card" style="margin-top:10px;padding:10px 12px">
+      <p class="eyebrow" style="margin-bottom:6px">{mode === 'after' ? 'How much did she eat?' : 'Which meal?'}</p>
+      {#if mode === 'after'}
+        <div class="row" style="flex-wrap:wrap;gap:6px">{#each EATEN as e (e)}<button class="ghost chip" class:on={childEaten === e} onclick={() => (childEaten = e)}>{e}</button>{/each}</div>
+      {:else}
+        <div class="row" style="flex-wrap:wrap;gap:6px">{#each mealSlots as s (s.slot)}<button class="ghost chip" class:on={childSlot === s.slot} onclick={() => (childSlot = s.slot)}>{s.label}</button>{/each}</div>
+      {/if}
+      <p class="muted" style="font-size:12.5px;margin:8px 0 0">{(result as ChildPlateResult).fruit_veg} fruit or veg · {(result as ChildPlateResult).protein ? 'protein present' : 'no clear protein'}{(result as ChildPlateResult).notes ? ` · ${(result as ChildPlateResult).notes}` : ''}</p>
+    </div>
+  {/if}
   {#if kind === 'plate'}
     <div class="card" style="margin-top:10px;padding:10px 12px">
       <p class="eyebrow" style="margin-bottom:6px">Log the meal</p>
@@ -192,7 +253,7 @@
     </div>
   {/if}
   <div class="row" style="margin-top:12px">
-    <button onclick={apply} disabled={busy || !kept.length}>{busy ? 'Saving' : kind === 'plate' ? (cookedNow ? 'Save and log meal' : 'Save recipe') : kind === 'recipe_url' ? 'Save recipe' : kind === 'lunchbox' ? (mode === 'home' ? `Record ${kept.length} verdicts` : `Pack ${kept.length}`) : `Apply ${kept.length}`}</button>
+    <button onclick={apply} disabled={busy || (!kept.length && kind !== 'child_plate')}>{busy ? 'Saving' : kind === 'plate' ? (cookedNow ? 'Save and log meal' : 'Save recipe') : kind === 'recipe_url' ? 'Save recipe' : kind === 'lunchbox' ? (mode === 'home' ? `Record ${kept.length} verdicts` : `Pack ${kept.length}`) : kind === 'child_plate' ? (mode === 'after' ? 'Record' : 'Log meal') : kind === 'shelf_photo' ? `Update ${kept.length}` : `Apply ${kept.length}`}</button>
     <button class="ghost" onclick={onclose}>Cancel</button>
   </div>
 </div>
