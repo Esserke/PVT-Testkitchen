@@ -6,8 +6,8 @@ export const TABS = [
   { path: 'shop', label: 'Shop' },
 ] as const
 
-export type Path = (typeof TABS)[number]['path'] | 'settings' | 'item' | 'recipe' | 'insights'
-const KNOWN: Path[] = ['today', 'stock', 'plan', 'recipes', 'shop', 'settings', 'item', 'recipe', 'insights']
+export type Path = (typeof TABS)[number]['path'] | 'settings' | 'item' | 'recipe' | 'insights' | 'faye'
+const KNOWN: Path[] = ['today', 'stock', 'plan', 'recipes', 'shop', 'settings', 'item', 'recipe', 'insights', 'faye']
 
 function parse(): { path: Path; param: string | null } {
   const [p, param] = window.location.hash.replace(/^#\/?/, '').split('/')

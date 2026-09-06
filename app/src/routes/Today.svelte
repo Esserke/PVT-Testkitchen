@@ -13,6 +13,7 @@
   import type { Capture, Item } from '../lib/db/types'
   import { planState, slotAt } from '../lib/planState.svelte'
   import { SLOTS, toIsoDate, slotsForDay } from '../lib/domain/plan'
+  import { CHILD_NAME } from '../lib/constants'
 
   const todayIso = toIsoDate(new Date())
   const itemsById = $derived(new Map(stockState.items.map((i) => [i.id, i])))
@@ -101,7 +102,7 @@
   <div class="card" style="padding:4px 12px;margin-bottom:18px">
     {#each meals as m (m.slot)}
       <div class="row meal" class:box={m.slot === 'school_snackbox'}>
-        <span class="lbl">{m.label}</span>
+        <span class="lbl">{m.slot === 'school_snackbox' ? `${CHILD_NAME}'s box` : m.label}</span>
         <span style="flex:1" class:muted={!m.txt || m.done}>{m.txt || '—'}</span>
         {#if m.done}<span class="pill">✓</span>{/if}
       </div>

@@ -85,6 +85,11 @@ describe('snack boxes', () => {
     expect(boxes.get('2026-08-31')).toEqual(['apple'])
     expect(boxes.get('2026-09-01')).not.toContain('cheese')
   })
+  it('prefers what she eats and skips what she leaves', () => {
+    const score = new Map([['apple', 0.2], ['banana', 0.9]])
+    const boxes = fillSnackBoxes(['2026-08-31'], snackPools(items), new Map(), new Map(), undefined, score)
+    expect(boxes.get('2026-08-31')![0]).toBe('banana')
+  })
 })
 
 describe('suggestDinners and cooking', () => {
@@ -95,7 +100,7 @@ describe('suggestDinners and cooking', () => {
   })
   it('deducts only count-tracked items', () => {
     const items = new Map([['mince', item('mince')], ['oil', item('oil', { tracking_mode: 'level' })]])
-    const slot: MealSlot = { id: 's', household_id: 'h', updated_at: '', deleted: false, date: '2026-09-01', slot: 'dinner', recipe_id: 'r', free_text: null, servings: 4, for_members: [], item_ids: [], status: 'planned', notes: null }
+    const slot: MealSlot = { id: 's', household_id: 'h', updated_at: '', deleted: false, date: '2026-09-01', slot: 'dinner', recipe_id: 'r', free_text: null, servings: 4, for_members: [], item_ids: [], item_verdicts: {}, status: 'planned', notes: null }
     const d = cookedDeductions(slot, recipe('r'), [ing('r', 'mince', 500, 'g'), ing('r', 'oil', 2, 'tbsp')], items)
     expect(d).toEqual([{ item: items.get('mince'), quantity: 0.5 }])
   })

@@ -118,7 +118,7 @@
   </section>
 
   <section>
-    <p class="eyebrow">Snack box</p>
+    <div class="row" style="justify-content:space-between"><p class="eyebrow">Snack box</p><button class="ghost" style="padding:4px 8px;font-size:13px" onclick={() => go('faye')}>What she eats</button></div>
     <div class="card">
       {#if variety.length === 0}
         <p class="muted" style="margin:0">Plan a week of snack boxes and variety shows here.</p>

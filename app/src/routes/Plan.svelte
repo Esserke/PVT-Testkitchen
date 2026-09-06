@@ -2,11 +2,14 @@
   import { planState, slotAt } from '../lib/planState.svelte'
   import { stockState, stockMap } from '../lib/stockState.svelte'
   import { SLOTS, weekStart, weekDays, addDays, toIsoDate, slotsForDay, snackPools, fillSnackBoxes, suggestDinners, lastCookedByRecipe } from '../lib/domain/plan'
-  import { upsertSlot, saveSlot } from '../lib/actions'
+  import { upsertSlot } from '../lib/actions'
+  import { go } from '../lib/router.svelte'
   import { showToast } from '../lib/toast.svelte'
   import SlotSheet from '../components/SlotSheet.svelte'
   import SnackBoxSheet from '../components/SnackBoxSheet.svelte'
   import type { MealSlot, MealSlotName } from '../lib/db/types'
+  import { verdictStats } from '../lib/domain/faye'
+  import { CHILD_NAME } from '../lib/constants'
 
   const today = toIsoDate(new Date())
   let start = $state(weekStart(today))
@@ -39,7 +42,8 @@
     const existing = new Map(planState.slots.filter((s) => s.slot === 'school_snackbox' && days.includes(s.date) && s.item_ids.length).map((s) => [s.date, s.item_ids]))
     const lastUsed = new Map<string, string>()
     for (const s of planState.slots) if (s.slot === 'school_snackbox') for (const id of s.item_ids) if ((lastUsed.get(id) ?? '') < s.date) lastUsed.set(id, s.date)
-    const boxes = fillSnackBoxes(days, snackPools(stockState.items), existing, lastUsed, stock)
+    const scores = new Map([...verdictStats(planState.slots)].map(([id, st]) => [id, st.score]))
+    const boxes = fillSnackBoxes(days, snackPools(stockState.items), existing, lastUsed, stock, scores)
     let n = 0
     for (const [d, ids] of boxes) {
       if (existing.has(d) || !ids.length) continue
@@ -73,6 +77,7 @@
     <button class="ghost sm" onclick={fillDinners}>Fill dinners</button>
     <button class="ghost sm" onclick={fillBoxes}>Fill snack boxes</button>
     <button class="ghost sm" onclick={copyLastWeek}>Copy last week</button>
+    <button class="ghost sm" onclick={() => go('faye')}>{CHILD_NAME}</button>
   </div>
 
   {#each days as d (d)}

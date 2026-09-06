@@ -126,3 +126,9 @@ Gas bottle,utilities,garage,piece,1,1,cycle,Other,false,false,bought,LPG|gas|9kg
 Cabbage,fresh,fridge,piece,1,0,count,Everfresh,false,true,bought,sweet cabbage,
 Gravy powder,pantry,pantry,piece,1,1,level,Spar,false,true,bought,gravy|Bisto,
 Pork sausages,fresh,freezer,kg,0.5,0.5,count,Checkers,false,true,bought,bangers|sausages,
+Strawberries,fresh,fridge,pack,1,0,count,Everfresh,true,true,bought,strawberry,fruit
+Naartjies,fresh,fridge,piece,1,4,count,Everfresh,true,true,bought,naartjie|mandarin|orange,fruit
+Fruit snacks,pantry,pantry,pack,1,4,count,Checkers,true,true,bought,Oh My Goodness|fruit gums|fruit roll|mango and carrot roll,treat
+Mini muffins,frozen,freezer,piece,6,4,count,Woolworths,true,true,bought,muffin|mini cake,treat
+Cherry tomatoes,fresh,fridge,pack,1,0,count,Everfresh,true,true,bought,baby tomatoes,veg
+Carrots,fresh,fridge,kg,1,0.5,level,Everfresh,true,true,bought,carrot|carrot sticks,veg

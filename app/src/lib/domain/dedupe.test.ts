@@ -20,7 +20,7 @@ describe('planDedupe', () => {
   it('repoints events and slot item lists without duplicates', () => {
     const keepers = new Map([['a', 'b']])
     expect(repointEvents([ev('e1', 'a'), ev('e2', 'b')], keepers).map((e) => [e.id, e.item_id])).toEqual([['e1', 'b']])
-    const slot: MealSlot = { id: 's', household_id: 'h', updated_at: '', deleted: false, date: '2026-09-01', slot: 'school_snackbox', recipe_id: null, free_text: null, servings: null, for_members: [], item_ids: ['a', 'b', 'c'], status: 'planned', notes: null }
+    const slot: MealSlot = { id: 's', household_id: 'h', updated_at: '', deleted: false, date: '2026-09-01', slot: 'school_snackbox', recipe_id: null, free_text: null, servings: null, for_members: [], item_ids: ['a', 'b', 'c'], item_verdicts: {}, status: 'planned', notes: null }
     expect(repointSlots([slot], keepers)[0].item_ids).toEqual(['b', 'c'])
   })
 })

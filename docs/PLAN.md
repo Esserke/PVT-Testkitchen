@@ -44,7 +44,7 @@ Goal: Sunday planning in 15 minutes; the list writes itself from the plan.
 - [x] Ideas list: title, link, why; promote to recipe; drop
 - [x] Plan tab: 7 × 5 week grid; tap a slot to pick a recipe, an idea, or type free text; copy last week
 - [x] School days: every weekday, no term calendar (Kevin, 2026-09-05); `school_snackbox` shows Mon–Fri. Term calendar stays optional for later
-- [x] Snack box builder: component slots, item pools, no-repeat rule, school rules; "what came back" logging
+- [x] Snack box builder: three compartments, item pools, no-repeat rule; per-item ate/some/left verdicts, Faye page with loves, not keen, untried and recent boxes; auto-fill steered by verdicts
 - [x] "Cooked" on a meal → `used` events for its ingredients scaled to servings; recipe stats update
 - [x] Shopping list v2: lines from plan ingredients minus current stock, with `reason`; grouped by shop; merged with below-par lines
 - [x] Leftovers: mark a dinner as "makes lunch tomorrow" to fill the next lunch slot

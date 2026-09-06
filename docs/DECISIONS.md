@@ -55,3 +55,12 @@
 - Settings gains "Discard N waiting" as a last resort. Local rows stay; only the send queue is cleared.
 - The starter catalogue import waits for a first pull when online, so a second phone cannot seed 124 duplicates before it has seen the first phone's items.
 - **Duplicate items** (both phones seeded the catalogue) are merged in the app, not with SQL: the copy with the most history wins, then the oldest; events, list lines, recipe ingredients and snack boxes are pointed at it; the rest are soft-deleted. Settings shows a Merge button whenever duplicates exist and Stock links to it.
+
+## 2026-09-06 — Faye's box
+
+- **Verdicts per item** on the snack box (`meal_slot.item_verdicts`, migration 0003): ate, some, or left, tapped on the box once it is marked packed. Free-text notes stay for anything else.
+- **Score** per item is smoothed: (ate + ½·some + 0.6) / (verdicts + 1). Untried items start at 0.6 so they get a turn; two verdicts are needed before an item is called a love (≥ 0.7) or not keen (left half the time or more).
+- **Auto-fill** prefers higher scores, skips items scoring under 0.4 while anything else is available, then falls back to least recently packed. It fills fruit, veg, carb, protein and treat; drinks are optional extras.
+- **Three compartments** in the sheet mirror the real box: Fresh (fruit, veg), Main (carb, protein), Treat.
+- **Faye page** (Plan → Faye, Insights → What she eats): loves, not keen, not tried yet, recent boxes with ✓ ~ ✗ marks. The child's name is a constant in `constants.ts` for now.
+- New snack items from the photos: strawberries, naartjies, fruit snacks (Oh My Goodness), mini muffins, cherry tomatoes, carrots.

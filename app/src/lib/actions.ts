@@ -1,7 +1,7 @@
 // The verbs of the app. Each writes one or more ledger rows through the repo.
 import { put, newId, nowIso, softDelete } from './db/repo'
 import { household } from './household.svelte'
-import type { Capture, CaptureSource, Idea, Item, ListLine, MealSlot, MealSlotName, Recipe, RecipeIngredient, StockEvent, StockEventType, Trip } from './db/types'
+import type { Capture, CaptureSource, Idea, Item, ListLine, MealSlot, MealSlotName, Recipe, RecipeIngredient, StockEvent, StockEventType, Trip, Verdict } from './db/types'
 import { cookedDeductions, addDays } from './domain/plan'
 import { planDedupe, repointEvents, repointIngredients, repointLines, repointSlots } from './domain/dedupe'
 import { db } from './db/schema'
@@ -100,12 +100,18 @@ export async function newIdea(title: string, source_url: string | null, why: str
 
 export const saveSlot = (s: MealSlot) => put('meal_slot', s)
 export function blankSlot(date: string, slot: MealSlotName): MealSlot {
-  return { ...base(), date, slot, recipe_id: null, free_text: null, servings: 3, for_members: [], item_ids: [], status: 'planned', notes: null }
+  return { ...base(), date, slot, recipe_id: null, free_text: null, servings: 3, for_members: [], item_ids: [], item_verdicts: {}, status: 'planned', notes: null }
 }
 export async function upsertSlot(existing: MealSlot | undefined, date: string, slot: MealSlotName, patch: Partial<MealSlot>): Promise<MealSlot> {
   return saveSlot({ ...(existing ?? blankSlot(date, slot)), ...patch })
 }
 export const clearSlot = (s: MealSlot) => softDelete('meal_slot', s.id)
+export async function setVerdict(slot: MealSlot, itemId: string, verdict: Verdict | null): Promise<MealSlot> {
+  const v = { ...(slot.item_verdicts ?? {}) }
+  if (verdict) v[itemId] = verdict
+  else delete v[itemId]
+  return saveSlot({ ...slot, item_verdicts: v })
+}
 
 // Cooking deducts count-tracked ingredients and marks the slot cooked.
 export async function cookSlot(slot: MealSlot, recipe: Recipe | null, ingredients: RecipeIngredient[], itemsById: Map<string, Item>): Promise<number> {

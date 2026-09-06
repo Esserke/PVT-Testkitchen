@@ -1,6 +1,7 @@
 // Meal planning maths: weeks, ingredient needs, cooking deductions, snack boxes.
 import type { Item, MealSlot, MealSlotName, Recipe, RecipeIngredient, SnackComponent } from '../db/types'
 import { SNACK_COMPONENTS } from '../db/types'
+import { AUTO_FILL_COMPONENTS } from '../constants'
 import type { ItemStock } from './stock'
 
 export const SLOTS: { slot: MealSlotName; label: string }[] = [
@@ -136,25 +137,32 @@ export function snackPools(items: Item[]): SnackPools {
   return pools
 }
 
-// Fill one box per school day: one item per component, no repeats within the week,
-// preferring items used least recently. Existing boxes are kept.
+// Fill one box per school day: fruit, veg, carb, protein and a treat (drinks are optional extras),
+// no repeats within the week, preferring what she eats (score) and then what was packed least recently.
+// Items she has left more often than not are skipped while there is anything else. Existing boxes are kept.
 export function fillSnackBoxes(
   days: string[],
   pools: SnackPools,
   existing: Map<string, string[]>,
   lastUsed: Map<string, string>,
   stock?: Map<string, ItemStock>,
+  score?: Map<string, number>,
 ): Map<string, string[]> {
   const out = new Map(existing)
   const usedThisWeek = new Set([...existing.values()].flat())
+  const sc = (id: string) => score?.get(id) ?? 0.6
   for (const day of days) {
     if (!isSchoolDay(day) || (existing.get(day)?.length ?? 0) > 0) continue
     const box: string[] = []
-    for (const c of SNACK_COMPONENTS) {
+    for (const c of AUTO_FILL_COMPONENTS) {
       const pool = pools[c].filter((i) => stock?.get(i.id)?.status !== 'out')
       if (!pool.length) continue
-      const fresh = pool.filter((i) => !usedThisWeek.has(i.id))
-      const pick = (fresh.length ? fresh : pool).sort((a, b) => (lastUsed.get(a.id) ?? '').localeCompare(lastUsed.get(b.id) ?? '') || a.name.localeCompare(b.name))[0]
+      const liked = pool.filter((i) => sc(i.id) >= 0.4)
+      const candidates = liked.length ? liked : pool
+      const fresh = candidates.filter((i) => !usedThisWeek.has(i.id))
+      const pick = (fresh.length ? fresh : candidates).sort(
+        (a, b) => sc(b.id) - sc(a.id) || (lastUsed.get(a.id) ?? '').localeCompare(lastUsed.get(b.id) ?? '') || a.name.localeCompare(b.name),
+      )[0]
       box.push(pick.id)
       usedThisWeek.add(pick.id)
     }

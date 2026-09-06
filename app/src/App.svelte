@@ -17,6 +17,8 @@
   import ItemDetail from './routes/ItemDetail.svelte'
   import RecipeEdit from './routes/RecipeEdit.svelte'
   import Insights from './routes/Insights.svelte'
+  import Faye from './routes/Faye.svelte'
+  import { CHILD_NAME } from './lib/constants'
   import { watchPlan } from './lib/planState.svelte'
   import Toast from './components/Toast.svelte'
   import { watchStock } from './lib/stockState.svelte'
@@ -36,7 +38,7 @@
   })
 
   const title = $derived(
-    route.path === 'settings' ? 'Settings' : route.path === 'item' ? 'Item' : route.path === 'recipe' ? 'Recipe' : route.path === 'insights' ? 'Insights' : route.path.charAt(0).toUpperCase() + route.path.slice(1),
+    route.path === 'settings' ? 'Settings' : route.path === 'item' ? 'Item' : route.path === 'recipe' ? 'Recipe' : route.path === 'insights' ? 'Insights' : route.path === 'faye' ? CHILD_NAME : route.path.charAt(0).toUpperCase() + route.path.slice(1),
   )
 </script>
 
@@ -66,6 +68,7 @@
     {:else if route.path === 'item'}<ItemDetail />
     {:else if route.path === 'recipe'}<RecipeEdit />
     {:else if route.path === 'insights'}<Insights />
+    {:else if route.path === 'faye'}<Faye />
     {/if}
   </main>
   <TabBar />

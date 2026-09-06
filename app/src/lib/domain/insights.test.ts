@@ -12,7 +12,7 @@ const ev = (item_id: string, type: StockEvent['type'], quantity: number, day: st
   id: `e${n++}`, household_id: 'h', updated_at: '', deleted: false, item_id, type, quantity, at: `${day}T08:00:00.000Z`, by_member: null, source: 'shopping', note, price_zar: price, capture_id: null,
 })
 const recipe = (id: string, rating = 0): Recipe => ({ id, household_id: 'h', updated_at: '', deleted: false, title: id, servings: 3, prep_minutes: null, cook_minutes: null, steps: null, source_url: null, photo_path: null, tags: [], rating: rating ? { household: rating } : {}, daughter_verdict: null })
-const slot = (date: string, over: Partial<MealSlot>): MealSlot => ({ id: `s${n++}`, household_id: 'h', updated_at: '', deleted: false, date, slot: 'dinner', recipe_id: null, free_text: null, servings: 3, for_members: [], item_ids: [], status: 'planned', notes: null, ...over })
+const slot = (date: string, over: Partial<MealSlot>): MealSlot => ({ id: `s${n++}`, household_id: 'h', updated_at: '', deleted: false, date, slot: 'dinner', recipe_id: null, free_text: null, servings: 3, for_members: [], item_ids: [], item_verdicts: {}, status: 'planned', notes: null, ...over })
 const TODAY = '2026-09-28'
 
 describe('spend', () => {
