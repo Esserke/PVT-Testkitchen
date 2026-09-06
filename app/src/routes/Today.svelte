@@ -10,6 +10,10 @@
   import { markFinished, undoEvent, captureText, saveCapture } from '../lib/actions'
   import { showToast } from '../lib/toast.svelte'
   import QuickSheet from '../components/QuickSheet.svelte'
+  import CaptureBar from '../components/CaptureBar.svelte'
+  import ProposalSheet from '../components/ProposalSheet.svelte'
+  import { parse, aiAvailable, type MessageResult } from '../lib/ai'
+  import { refreshAiUsage } from '../lib/aiUsage.svelte'
   import type { Capture, Item } from '../lib/db/types'
   import { planState, slotAt } from '../lib/planState.svelte'
   import { SLOTS, toIsoDate, slotsForDay } from '../lib/domain/plan'
@@ -71,6 +75,21 @@
     showToast('Noted. It is in the inbox until we read it.')
   }
   const dismiss = (c: Capture) => saveCapture({ ...c, status: 'dismissed' })
+  let reading = $state<string | null>(null)
+  let noteProposal = $state<{ capture: Capture; result: MessageResult } | null>(null)
+  async function readNote(c: Capture) {
+    if (!aiAvailable()) return showToast('Reading notes needs the online version of the app.')
+    reading = c.id
+    try {
+      const result = await parse<MessageResult>('message', { text: c.raw_text ?? '' })
+      noteProposal = { capture: c, result }
+      void refreshAiUsage()
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : String(err), null, 8000)
+    } finally {
+      reading = null
+    }
+  }
 
   const today = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })
 </script>
@@ -78,10 +97,11 @@
 <div class="page">
   <p class="eyebrow">{today}</p>
 
-  <form onsubmit={capture} class="row" style="margin:10px 0 18px">
+  <form onsubmit={capture} class="row" style="margin:10px 0 10px">
     <input bind:value={text} placeholder="Milk finished, low on rusks…" aria-label="Quick note" />
     <button type="submit" disabled={!text.trim()}>Note</button>
   </form>
+  <div style="margin-bottom:18px"><CaptureBar /></div>
 
   {#if pending.length}
     <p class="eyebrow" style="margin-bottom:6px">Inbox · {pending.length}</p>
@@ -89,6 +109,7 @@
       {#each pending as c (c.id)}
         <div class="card row" style="padding:10px 12px">
           <div style="flex:1">{c.raw_text}</div>
+          <button onclick={() => readNote(c)} disabled={reading === c.id}>{reading === c.id ? 'Reading' : 'Read'}</button>
           <button class="ghost" onclick={() => dismiss(c)}>Done</button>
         </div>
       {/each}
@@ -152,6 +173,9 @@
 
 {#if sheetItem}
   <QuickSheet item={sheetItem} stock={stock.get(sheetItem.id)} onclose={() => (sheetItem = null)} />
+{/if}
+{#if noteProposal}
+  <ProposalSheet kind="message" result={noteProposal.result} onclose={() => (noteProposal = null)} ondone={() => noteProposal && saveCapture({ ...noteProposal.capture, status: 'confirmed' })} />
 {/if}
 
 <style>

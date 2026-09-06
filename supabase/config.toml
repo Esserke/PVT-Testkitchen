@@ -1,0 +1,4 @@
+project_id = "zmdcijdirhefmatdrujn"
+
+[functions.parse]
+verify_jwt = true

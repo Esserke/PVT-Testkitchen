@@ -57,14 +57,15 @@ Done when: a full week is planned, cooked and shopped through the app and the li
 
 Goal: photos and messages replace typing.
 
-- [ ] Supabase Edge Function `parse` with `kind` dispatch; strict JSON schemas; API key in function secrets
-- [ ] `message`: inbox text → proposed events and list lines; one-tap confirm; aliases learned from corrections
-- [ ] `shelf_photo`: camera capture, client-side compression, upload to Storage, extraction → diff against current stock for that location → confirm rows → `count` events; keep the snapshot
-- [ ] `receipt`: till-slip photo → `bought` events with prices and shop; unmatched lines offered as new items
-- [ ] `recipe_url`: paste a link → draft recipe with ingredients mapped to items
-- [ ] Dictation via the browser speech API feeding the message parser
-- [ ] Confidence thresholds and per-path auto-apply setting; everything else lands in the inbox
-- [ ] Cost guard: count calls per day; show monthly spend estimate in settings
+- [x] Supabase Edge Function `parse` with `kind` dispatch; strict JSON schemas; API key in function secrets
+- [x] `message`: inbox text → proposed events and list lines; one-tap confirm; aliases learned from corrections
+- [x] `shelf_photo`: camera capture, client-side compression, upload to Storage, extraction → diff against current stock for that location → confirm rows → `count` events; keep the snapshot
+- [x] `receipt`: till-slip photo → `bought` events with prices and shop; unmatched lines offered as new items
+- [x] `recipe_url`: paste a link → draft recipe with ingredients mapped to items
+- [x] `plate`: photograph a plate → draft recipe with ingredients mapped to items
+- [ ] Dictation via the browser speech API feeding the message parser (phones already offer keyboard dictation into the note box)
+- [x] Confidence thresholds and per-path auto-apply setting; everything else lands in the inbox
+- [x] Cost guard: count calls per day; show monthly spend estimate in settings
 
 Done when: a fridge photo produces a correct stock count for at least 8 of 10 items on first try, and "milk finished, buy rusks" needs no edits.
 

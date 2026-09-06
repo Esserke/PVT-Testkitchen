@@ -39,3 +39,12 @@ Leave the two keys empty and the app runs in local-only mode with no sign-in and
 ## Phase 0 acceptance check
 
 Put one phone in flight mode, add an item on it, take it out of flight mode. The item should appear on the other phone without anyone refreshing.
+
+## 5. Reading photos and notes (Phase 3)
+
+The reading function needs two GitHub repository secrets (Settings → Secrets and variables → Actions → Secrets):
+
+- `ANTHROPIC_API_KEY` from console.anthropic.com (prepaid credit required)
+- `SUPABASE_ACCESS_TOKEN` from https://supabase.com/dashboard/account/tokens
+
+Run `supabase/migrations/0004_ai_usage.sql` in the SQL editor. The workflow `Deploy Supabase functions` then publishes the function on merge; it can also be run by hand from the Actions tab. Reads are capped at 60 per household per day; usage and an estimated cost appear under Settings.

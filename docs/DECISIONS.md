@@ -64,3 +64,14 @@
 - **Three compartments** in the sheet mirror the real box: Fresh (fruit, veg), Main (carb, protein), Treat.
 - **Faye page** (Plan → Faye, Insights → What she eats): loves, not keen, not tried yet, recent boxes with ✓ ~ ✗ marks. The child's name is a constant in `constants.ts` for now.
 - New snack items from the photos: strawberries, naartjies, fruit snacks (Oh My Goodness), mini muffins, cherry tomatoes, carrots.
+
+## 2026-09-06 — Phase 3: Claude reads
+
+- **One edge function, `parse`**, with a `kind` switch: message, shelf_photo, receipt, plate, recipe_url. Runs on Supabase Edge Functions (Deno) with `verify_jwt` on, so only signed-in household members can call it. It looks up the caller's household itself; the phone never sends a household id.
+- **Model**: `claude-opus-5` with structured outputs (`output_config.format` from a zod schema via `messages.parse`) at medium effort. Every result is schema-checked before it reaches the app. Refusal fallbacks were left out: the inputs are kitchen photos and shopping notes, and keeping the request canonical mattered more since it cannot be exercised from the build sandbox.
+- **Catalogue in the prompt**: the household's items (id, name, aliases, unit, pack size, location, current stock) go in the system prompt behind a cache breakpoint so repeated reads reuse it. The model returns `item_id` matches; the app never trusts a name alone.
+- **Nothing is applied automatically.** Every read opens a confirm sheet; low-confidence and unmatched rows start unticked; new items are created only when the user keeps them.
+- **Photos are shrunk on the phone** to 1280 px JPEG and are not stored anywhere. Snapshot history from the design is deferred.
+- **Cap and spend**: `ai_usage` rows per call (migration 0004); 60 reads per household per day; Settings shows today's count and a monthly cost estimate from token counts.
+- **Deploy**: `.github/workflows/functions.yml` sets the Anthropic key as a Supabase secret and deploys the function on any push to main that touches it, using two GitHub secrets: `ANTHROPIC_API_KEY` and `SUPABASE_ACCESS_TOKEN`.
+- **Not tested end to end here**: the sandbox cannot reach Anthropic or Supabase, so the function was type-checked and reviewed but first exercised by the household. Errors from the function are shown verbatim in a toast so they can be reported.

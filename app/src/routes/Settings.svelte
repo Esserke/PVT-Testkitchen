@@ -6,6 +6,10 @@
   import { stockState } from '../lib/stockState.svelte'
   import { countDuplicates, mergeDuplicateItems } from '../lib/actions'
   import { showToast } from '../lib/toast.svelte'
+  import { aiUsage, refreshAiUsage } from '../lib/aiUsage.svelte'
+  $effect(() => {
+    void refreshAiUsage()
+  })
 
   const duplicates = $derived(countDuplicates(stockState.items, stockState.events))
   let merging = $state(false)
@@ -65,6 +69,18 @@
       {#if sync.pending}<p class="muted" style="font-size:12.5px;margin-top:8px">Discard only if changes stay stuck after reopening the app. Whatever is on this phone stays; it just stops trying to send it.</p>{/if}
     {/if}
   </div>
+
+  {#if supabase}
+    <div class="card" style="margin-bottom:12px">
+      <p class="eyebrow">Reading photos and notes</p>
+      {#if aiUsage.loaded}
+        <p>Today: <b>{aiUsage.today}</b> of 60 reads. This month: {aiUsage.monthCalls} read{aiUsage.monthCalls === 1 ? '' : 's'}, about <b>${aiUsage.monthCost.toFixed(2)}</b>.</p>
+      {:else}
+        <p class="muted">No reads yet. Use the camera buttons on Today, or Read on a note.</p>
+      {/if}
+      <p class="muted" style="font-size:12.5px;margin:0">Photos are shrunk on the phone before sending and are not stored. The cap resets at midnight UTC.</p>
+    </div>
+  {/if}
 
   {#if supabase && auth.session}
     <div class="card">
