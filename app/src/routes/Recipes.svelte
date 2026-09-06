@@ -5,6 +5,28 @@
   import { importStarterRecipes } from '../lib/seedRecipes'
   import { household } from '../lib/household.svelte'
   import { STARTER_RECIPES } from '../data/recipes'
+  import { parse, aiAvailable, type RecipeResult } from '../lib/ai'
+  import { refreshAiUsage } from '../lib/aiUsage.svelte'
+  import ProposalSheet from '../components/ProposalSheet.svelte'
+
+  let url = $state('')
+  let fetching = $state(false)
+  let urlProposal = $state<RecipeResult | null>(null)
+  async function fromLink(e: Event) {
+    e.preventDefault()
+    if (!url.trim()) return
+    if (!aiAvailable()) return showToast('Reading links needs the online version of the app.')
+    fetching = true
+    try {
+      urlProposal = await parse<RecipeResult>('recipe_url', { url: url.trim() })
+      url = ''
+      void refreshAiUsage()
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : String(err), null, 8000)
+    } finally {
+      fetching = false
+    }
+  }
 
   const missingStarters = $derived(STARTER_RECIPES.filter((sr) => !planState.recipes.some((r) => r.title.toLowerCase() === sr.title.toLowerCase())).length)
   let loadingStarters = $state(false)
@@ -69,10 +91,14 @@
   </div>
 
   {#if tab === 'favourites'}
-    <div class="row" style="margin-bottom:14px">
+    <div class="row" style="margin-bottom:10px">
       <input bind:value={q} placeholder="Search or type a new name" aria-label="Search recipes" />
       <button onclick={create}>New</button>
     </div>
+    <form onsubmit={fromLink} class="row" style="margin-bottom:14px">
+      <input bind:value={url} placeholder="Paste a recipe link" inputmode="url" aria-label="Recipe link" />
+      <button type="submit" class="ghost" disabled={fetching || !url.trim()}>{fetching ? 'Reading' : 'Read link'}</button>
+    </form>
     {#if missingStarters && !q}
       <p class="muted" style="margin:-4px 0 12px;font-size:13.5px">{missingStarters} starter recipe{missingStarters === 1 ? '' : 's'} ready to add. <button class="ghost" style="padding:4px 8px;font-size:13px" onclick={loadStarters} disabled={loadingStarters}>{loadingStarters ? 'Adding' : 'Add'}</button></p>
     {/if}
@@ -125,6 +151,10 @@
     {/if}
   {/if}
 </div>
+
+{#if urlProposal}
+  <ProposalSheet kind="recipe_url" result={urlProposal} onclose={() => (urlProposal = null)} />
+{/if}
 
 <style>
   .rcard { text-align: left; color: var(--ink); display: block; width: 100%; font-weight: 400; }
