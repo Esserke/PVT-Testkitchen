@@ -1,9 +1,13 @@
 <script lang="ts">
   // Shows what the reader proposed and applies only the rows the user keeps.
-  import type { Kind, Result, MessageResult, ShelfResult, ReceiptResult, RecipeResult } from '../lib/ai'
+  import type { Kind, Result, MessageResult, ShelfResult, ReceiptResult, RecipeResult, LunchboxResult } from '../lib/ai'
   import { stockState } from '../lib/stockState.svelte'
   import { planState } from '../lib/planState.svelte'
-  import { recordEvent, bought, newTrip, addLine, saveRecipe, saveIngredient, blankIngredient } from '../lib/actions'
+  import { recordEvent, bought, newTrip, addLine, saveRecipe, saveIngredient, blankIngredient, upsertSlot, cookSlot, saveSlot } from '../lib/actions'
+  import { slotAt, ingredientsByRecipe } from '../lib/planState.svelte'
+  import { toIsoDate, SLOTS } from '../lib/domain/plan'
+  import { CHILD_NAME } from '../lib/constants'
+  import type { MealSlotName, Verdict } from '../lib/db/types'
   import { put, newId } from '../lib/db/repo'
   import { household } from '../lib/household.svelte'
   import { db } from '../lib/db/schema'
@@ -11,7 +15,18 @@
   import { go } from '../lib/router.svelte'
   import type { Item, Trip } from '../lib/db/types'
 
-  let { kind, result, location = null, onclose, ondone }: { kind: Kind; result: Result; location?: string | null; onclose: () => void; ondone?: () => void } = $props()
+  let { kind, result, location = null, mode = 'packed', onclose, ondone }: { kind: Kind; result: Result; location?: string | null; mode?: 'packed' | 'home'; onclose: () => void; ondone?: () => void } = $props()
+  const today = toIsoDate(new Date())
+  // Plate photos also log the meal: which slot, how many plates, and whether it was cooked now.
+  const hour = new Date().getHours()
+  let mealSlot = $state<MealSlotName>(hour < 10.5 ? 'breakfast' : hour < 15 ? 'lunch' : 'dinner')
+  let plates = $state<number>(2)
+  $effect(() => {
+    const sv = (result as RecipeResult).servings
+    if (kind === 'plate' && sv) plates = sv
+  })
+  let cookedNow = $state(true)
+  const mealSlots = SLOTS.filter((s) => s.slot !== 'school_snackbox')
   const itemsById = $derived(new Map(stockState.items.map((i) => [i.id, i])))
 
   interface Row { key: string; label: string; detail: string; qty: number | null; keep: boolean; item: Item | undefined; raw: unknown; isNew: boolean; price?: number | null }
@@ -31,12 +46,14 @@
       ;(result as ShelfResult).items.forEach((it, i) => out.push({ key: `s${i}`, label: nameOf(it), detail: `${it.confidence} confidence${it.is_new ? ' · new item' : ''}`, qty: it.quantity, keep: it.confidence !== 'low' && !!it.item_id, item: it.item_id ? itemsById.get(it.item_id) : undefined, raw: it, isNew: !it.item_id }))
     } else if (kind === 'receipt') {
       ;(result as ReceiptResult).lines.forEach((l, i) => out.push({ key: `r${i}`, label: nameOf(l), detail: `${l.text}${l.price != null ? ` · R${l.price}` : ''}`, qty: l.quantity, keep: l.is_food_or_household && !!l.item_id, item: l.item_id ? itemsById.get(l.item_id) : undefined, raw: l, isNew: !l.item_id && l.is_food_or_household, price: l.price }))
+    } else if (kind === 'lunchbox') {
+      ;(result as LunchboxResult).items.forEach((it, i) => out.push({ key: `b${i}`, label: nameOf(it), detail: mode === 'home' ? (it.state === 'gone' ? 'gone → ate' : it.state === 'partly_eaten' ? 'partly eaten → some' : 'untouched → left') : `${it.confidence} confidence`, qty: null, keep: !!it.item_id && it.confidence !== 'low', item: it.item_id ? itemsById.get(it.item_id) : undefined, raw: it, isNew: false }))
     } else {
       ;(result as RecipeResult).ingredients.forEach((g, i) => out.push({ key: `g${i}`, label: nameOf(g), detail: `${g.quantity ?? ''} ${g.unit ?? ''}${g.optional ? ' · optional' : ''}`.trim(), qty: g.quantity, keep: true, item: g.item_id ? itemsById.get(g.item_id) : undefined, raw: g, isNew: !g.item_id }))
     }
     rows = out
   })
-  const title = $derived(kind === 'message' ? 'From your note' : kind === 'shelf_photo' ? `Seen in the ${location ?? 'photo'}` : kind === 'receipt' ? `Till slip${(result as ReceiptResult).shop ? ` · ${(result as ReceiptResult).shop}` : ''}` : (result as RecipeResult).title)
+  const title = $derived(kind === 'message' ? 'From your note' : kind === 'shelf_photo' ? `Seen in the ${location ?? 'photo'}` : kind === 'receipt' ? `Till slip${(result as ReceiptResult).shop ? ` · ${(result as ReceiptResult).shop}` : ''}` : kind === 'lunchbox' ? (mode === 'home' ? `${CHILD_NAME}'s box came home` : `${CHILD_NAME}'s box`) : (result as RecipeResult).title)
   const kept = $derived(rows.filter((r) => r.keep))
 
   async function ensureItem(name: string, unit = 'piece'): Promise<Item> {
@@ -79,6 +96,27 @@
           await bought(item, r.qty ?? 1, r.price ?? null, 'shopping', rr.shop ?? undefined)
           n++
         }
+      } else if (kind === 'lunchbox') {
+        const existing = slotAt(planState.slots, today, 'school_snackbox')
+        if (mode === 'home') {
+          const base = existing ?? (await upsertSlot(undefined, today, 'school_snackbox', { item_ids: [] }))
+          const verdicts: Record<string, Verdict> = { ...(base.item_verdicts ?? {}) }
+          const ids = [...base.item_ids]
+          for (const r of kept) {
+            const it = r.raw as LunchboxResult['items'][number]
+            if (!r.item) continue
+            if (!ids.includes(r.item.id)) ids.push(r.item.id)
+            verdicts[r.item.id] = it.state === 'gone' ? 'ate' : it.state === 'partly_eaten' ? 'some' : 'left'
+            n++
+          }
+          const notes = (result as LunchboxResult).notes
+          await saveSlot({ ...base, item_ids: ids, item_verdicts: verdicts, notes: notes ?? base.notes, status: base.status === 'cooked' ? 'cooked' : 'planned' })
+        } else {
+          const ids = kept.map((r) => r.item?.id).filter((x): x is string => !!x)
+          const slot = await upsertSlot(existing, today, 'school_snackbox', { item_ids: [...new Set([...(existing?.item_ids ?? []), ...ids])] })
+          if (slot.status !== 'cooked') await cookSlot(slot, null, [], itemsById)
+          n = ids.length
+        }
       } else {
         const rr = result as RecipeResult
         const recipe = await saveRecipe({ id: newId(), household_id: household.id!, updated_at: '', deleted: false, title: rr.title, servings: rr.servings ?? 3, prep_minutes: rr.prep_minutes, cook_minutes: rr.cook_minutes, steps: rr.steps || null, source_url: null, photo_path: null, tags: rr.tags.slice(0, 6), rating: {}, daughter_verdict: null })
@@ -87,7 +125,17 @@
           await saveIngredient({ ...blankIngredient(recipe.id), item_id: r.item?.id ?? null, free_text: r.item ? null : r.label, quantity: g.quantity, unit: g.unit, optional: g.optional })
           n++
         }
-        showToast(`Recipe saved with ${n} ingredients`)
+        if (kind === 'plate') {
+          const existing = slotAt(planState.slots, today, mealSlot)
+          const slot = await upsertSlot(existing, today, mealSlot, { recipe_id: recipe.id, free_text: null, servings: plates || rr.servings || 2, status: 'planned' })
+          if (cookedNow) {
+            const ings = ingredientsByRecipe(planState.ingredients).get(recipe.id) ?? (await db.recipe_ingredient.where('recipe_id').equals(recipe.id).toArray())
+            await cookSlot(slot, recipe, ings, itemsById)
+          }
+          showToast(cookedNow ? `Logged as today's ${mealSlot} and deducted` : `Recipe saved and planned for ${mealSlot}`)
+        } else {
+          showToast(`Recipe saved with ${n} ingredients`)
+        }
         onclose()
         ondone?.()
         go('recipe', recipe.id)
@@ -131,8 +179,20 @@
       <p class="muted" style="font-size:12.5px;margin-top:8px">Not understood: {(result as MessageResult).unmatched.join(' · ')}</p>
     {/if}
   </div>
+  {#if kind === 'plate'}
+    <div class="card" style="margin-top:10px;padding:10px 12px">
+      <p class="eyebrow" style="margin-bottom:6px">Log the meal</p>
+      <div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:8px">
+        {#each mealSlots as s (s.slot)}<button class="ghost chip" class:on={mealSlot === s.slot} onclick={() => (mealSlot = s.slot)}>{s.label}</button>{/each}
+      </div>
+      <div class="row">
+        <label class="row" style="margin:0;gap:6px">Plates <input type="number" min="1" inputmode="numeric" bind:value={plates} style="width:64px;padding:6px 8px" /></label>
+        <label class="row" style="margin:0;gap:6px"><input type="checkbox" bind:checked={cookedNow} style="width:20px;height:20px" /> Cooked now, deduct</label>
+      </div>
+    </div>
+  {/if}
   <div class="row" style="margin-top:12px">
-    <button onclick={apply} disabled={busy || !kept.length}>{busy ? 'Saving' : kind === 'plate' || kind === 'recipe_url' ? 'Save recipe' : `Apply ${kept.length}`}</button>
+    <button onclick={apply} disabled={busy || !kept.length}>{busy ? 'Saving' : kind === 'plate' ? (cookedNow ? 'Save and log meal' : 'Save recipe') : kind === 'recipe_url' ? 'Save recipe' : kind === 'lunchbox' ? (mode === 'home' ? `Record ${kept.length} verdicts` : `Pack ${kept.length}`) : `Apply ${kept.length}`}</button>
     <button class="ghost" onclick={onclose}>Cancel</button>
   </div>
 </div>
@@ -145,4 +205,6 @@
   .prow { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--rule-soft); margin: 0; font-size: 14.5px; color: var(--ink); }
   .prow.off { opacity: .5; }
   .qty { width: 70px; padding: 6px 8px; }
+  .chip { padding: 6px 10px; font-size: 13px; }
+  .chip.on { background: var(--moss); color: #fff; border-color: var(--moss); }
 </style>

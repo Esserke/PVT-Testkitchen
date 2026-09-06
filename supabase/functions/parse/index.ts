@@ -71,10 +71,20 @@ const RecipeOut = z.object({
   notes: z.string().nullable(),
 });
 
-type Kind = "message" | "shelf_photo" | "receipt" | "plate" | "recipe_url";
+const LunchboxOut = z.object({
+  items: z.array(z.object({
+    ...Match,
+    state: z.enum(["full", "partly_eaten", "gone", "untouched"]).describe("full/untouched when the food is still all there; partly_eaten when some is gone; gone when the compartment is empty or only crumbs remain"),
+    confidence: z.enum(["high", "medium", "low"]),
+  })),
+  notes: z.string().nullable().describe("anything worth telling the parents, one short sentence"),
+});
+
+type Kind = "message" | "shelf_photo" | "receipt" | "plate" | "recipe_url" | "lunchbox";
 interface CatalogueItem { id: string; name: string; aliases: string[]; unit: string; pack_size: number; location: string; stock: number | null }
 interface Body {
   kind: Kind;
+  mode?: "packed" | "home";
   text?: string;
   url?: string;
   location?: string;
@@ -159,6 +169,13 @@ Deno.serve(async (req) => {
       if (!body.image) return json({ error: "image required" }, 400);
       schema = RecipeOut;
       userContent = [...image, { type: "text", text: `This is a plate of food we made at home${body.text ? `. The cook says: "${body.text}"` : ""}. Draft it as a recipe: a short title, the number of servings shown, the ingredients with sensible home-cook quantities per serving scaled to the servings, and brief steps. Match ingredients to the catalogue where you can.` }];
+      break;
+    case "lunchbox":
+      if (!body.image) return json({ error: "image required" }, 400);
+      schema = LunchboxOut;
+      userContent = [...image, { type: "text", text: body.mode === "home"
+        ? "This is a child's school snack box that has just come home. For each food you can identify, say whether it is gone, partly eaten, or untouched. Match to catalogue items marked for the snack box where you can. Leftover packaging with no food counts as gone."
+        : "This is a child's school snack box being packed. List each food in it, matched to catalogue items where you can. State is full for everything." }];
       break;
     case "recipe_url": {
       if (!body.url) return json({ error: "url required" }, 400);
