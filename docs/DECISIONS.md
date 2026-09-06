@@ -77,3 +77,9 @@
 - **Not tested end to end here**: the sandbox cannot reach Anthropic or Supabase, so the function was type-checked and reviewed but first exercised by the household. Errors from the function are shown verbatim in a toast so they can be reported.
 - **Plate photos log the meal, not just the recipe.** The confirm sheet asks which meal (defaulting by time of day), how many plates, and whether it was cooked now; saving plans it on today and deducts ingredients in one go.
 - **Lunchbox photos**: kind `lunchbox` with mode packed or home. Packing fills today's box and marks it packed; coming home turns gone / partly eaten / untouched into ate / some / left verdicts. Photo kinds stay as explicit buttons rather than auto-detection, because the tap tells the reader what to do, not just what it sees.
+
+## 2026-09-06 — Faye's record, stock takes, expenses
+
+- **Faye has her own tables** (`child_meal`, `child_metric`, migration 0005) rather than rows in the household plan: what she was served, which catalogue items, how much she ate (all / most / some / little / none), fruit-and-veg count and whether protein was present, plus weight and height entries. The camera bar gains a second row for her: box packed, box home, plate before, plate after.
+- **Shelf photos reconcile, they do not blindly overwrite.** The sheet shows app says versus photo says per item; only differences start ticked; one tap trusts the shelf for all or keeps the app for all. Purchases (slips) add, shelf photos confirm, so the two never double count.
+- **Till slips become the expense record.** A slip is kept as a confirmed receipt capture with shop, date and total, alongside the priced purchase events. A `budget` table holds a monthly total and optional per-category amounts; Insights shows spent, budget and a straight-line projection to month end, and lists recent slips.

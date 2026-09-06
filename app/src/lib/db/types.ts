@@ -133,6 +133,29 @@ export interface SchoolTerm extends Synced {
   label: string | null
 }
 
+export type Eaten = 'all' | 'most' | 'some' | 'little' | 'none'
+export interface ChildMeal extends Synced {
+  date: string
+  slot: MealSlotName
+  description: string | null
+  item_ids: string[]
+  eaten: Eaten | null
+  fruit_veg: number
+  protein: boolean
+  notes: string | null
+  at: string
+}
+export interface ChildMetric extends Synced {
+  date: string
+  kind: 'weight_kg' | 'height_cm' | 'note'
+  value: number | null
+  text_value: string | null
+}
+export interface Budget extends Synced {
+  category: string
+  monthly_zar: number
+}
+
 export const SYNCED_TABLES = [
   'item',
   'stock_event',
@@ -144,6 +167,9 @@ export const SYNCED_TABLES = [
   'trip',
   'list_line',
   'school_calendar',
+  'child_meal',
+  'child_metric',
+  'budget',
 ] as const
 
 export type SyncedTable = (typeof SYNCED_TABLES)[number]

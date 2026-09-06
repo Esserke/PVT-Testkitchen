@@ -1,6 +1,6 @@
 import Dexie, { type Table } from 'dexie'
 import type {
-  Capture, Idea, Item, ListLine, MealSlot, MetaEntry, OutboxEntry, Recipe, RecipeIngredient,
+  Budget, Capture, ChildMeal, ChildMetric, Idea, Item, ListLine, MealSlot, MetaEntry, OutboxEntry, Recipe, RecipeIngredient,
   SchoolTerm, StockEvent, SyncedTable, Trip,
 } from './types'
 
@@ -15,6 +15,9 @@ export class LarderDB extends Dexie {
   trip!: Table<Trip, string>
   list_line!: Table<ListLine, string>
   school_calendar!: Table<SchoolTerm, string>
+  child_meal!: Table<ChildMeal, string>
+  child_metric!: Table<ChildMetric, string>
+  budget!: Table<Budget, string>
   outbox!: Table<OutboxEntry, number>
   meta!: Table<MetaEntry, string>
 
@@ -33,6 +36,11 @@ export class LarderDB extends Dexie {
       school_calendar: 'id, household_id, term_start, updated_at',
       outbox: '++id, [table+row_id], ts',
       meta: 'key',
+    })
+    this.version(2).stores({
+      child_meal: 'id, household_id, date, updated_at',
+      child_metric: 'id, household_id, date, updated_at',
+      budget: 'id, household_id, category, updated_at',
     })
   }
 

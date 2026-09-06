@@ -7,6 +7,29 @@
   import { countDuplicates, mergeDuplicateItems } from '../lib/actions'
   import { showToast } from '../lib/toast.svelte'
   import { aiUsage, refreshAiUsage } from '../lib/aiUsage.svelte'
+  import { childState } from '../lib/childState.svelte'
+  import { setBudget } from '../lib/actions'
+  import { CATEGORIES } from '../lib/constants'
+  const totalBudget = $derived(childState.budgets.find((b) => b.category === 'all'))
+  let budgetTotal = $state<number | null>(null)
+  let budgetCat = $state<string>(CATEGORIES[0])
+  let budgetCatAmount = $state<number | null>(null)
+  $effect(() => {
+    budgetTotal = totalBudget?.monthly_zar ?? null
+  })
+  async function saveTotal(e: Event) {
+    e.preventDefault()
+    if (budgetTotal === null) return
+    await setBudget(totalBudget, 'all', Number(budgetTotal))
+    showToast('Budget saved')
+  }
+  async function saveCat(e: Event) {
+    e.preventDefault()
+    if (budgetCatAmount === null) return
+    await setBudget(childState.budgets.find((b) => b.category === budgetCat), budgetCat, Number(budgetCatAmount))
+    budgetCatAmount = null
+    showToast(`${budgetCat} budget saved`)
+  }
   $effect(() => {
     void refreshAiUsage()
   })
@@ -67,6 +90,23 @@
         {#if sync.pending}<button class="ghost" onclick={discardPending}>Discard {sync.pending} waiting</button>{/if}
       </div>
       {#if sync.pending}<p class="muted" style="font-size:12.5px;margin-top:8px">Discard only if changes stay stuck after reopening the app. Whatever is on this phone stays; it just stops trying to send it.</p>{/if}
+    {/if}
+  </div>
+
+  <div class="card" style="margin-bottom:12px">
+    <p class="eyebrow">Monthly budget</p>
+    <form onsubmit={saveTotal} class="row" style="margin-bottom:8px">
+      <label for="bt" style="margin:0;white-space:nowrap">Whole house R</label>
+      <input id="bt" type="number" min="0" step="100" inputmode="numeric" bind:value={budgetTotal} placeholder="8000" />
+      <button type="submit">Save</button>
+    </form>
+    <form onsubmit={saveCat} class="row" style="flex-wrap:wrap">
+      <select bind:value={budgetCat} style="width:auto">{#each CATEGORIES as c}<option value={c}>{c}</option>{/each}</select>
+      <input type="number" min="0" step="50" inputmode="numeric" bind:value={budgetCatAmount} placeholder="R per month" style="width:130px" />
+      <button type="submit" class="ghost">Set</button>
+    </form>
+    {#if childState.budgets.filter((b) => b.category !== 'all').length}
+      <p class="muted" style="font-size:12.5px;margin:8px 0 0">{childState.budgets.filter((b) => b.category !== 'all').map((b) => `${b.category} R${b.monthly_zar}`).join(' · ')}</p>
     {/if}
   </div>
 

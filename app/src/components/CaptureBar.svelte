@@ -1,6 +1,6 @@
 <script lang="ts">
   // Camera entry points. Each opens the phone camera, shrinks the photo, and sends it to the reader.
-  import { parse, shrinkImage, aiAvailable, type Kind, type Result } from '../lib/ai'
+  import { parse, shrinkImage, aiAvailable, type Kind, type Result, type Mode } from '../lib/ai'
   import { LOCATIONS, CHILD_NAME } from '../lib/constants'
   import { showToast } from '../lib/toast.svelte'
   import { refreshAiUsage } from '../lib/aiUsage.svelte'
@@ -9,23 +9,17 @@
   let kind = $state<Kind | null>(null)
   let location = $state<string>('fridge')
   let askLocation = $state(false)
-  let askBox = $state(false)
-  let boxMode = $state<'packed' | 'home'>('packed')
+  let boxMode = $state<Mode>('packed')
   let busy = $state<string | null>(null)
   let proposal = $state<{ kind: Kind; result: Result } | null>(null)
   let fileInput = $state<HTMLInputElement | null>(null)
 
-  function start(k: Kind) {
+  function start(k: Kind, m?: Mode) {
     if (!aiAvailable()) return showToast('Photo reading needs the online version of the app.')
     kind = k
+    if (m) boxMode = m
     if (k === 'shelf_photo') askLocation = true
-    else if (k === 'lunchbox') askBox = true
     else fileInput?.click()
-  }
-  function confirmBox(m: 'packed' | 'home') {
-    boxMode = m
-    askBox = false
-    fileInput?.click()
   }
   function confirmLocation() {
     askLocation = false
@@ -35,10 +29,10 @@
     const file = (e.currentTarget as HTMLInputElement).files?.[0]
     ;(e.currentTarget as HTMLInputElement).value = ''
     if (!file || !kind) return
-    busy = kind === 'shelf_photo' ? 'Reading the shelf' : kind === 'receipt' ? 'Reading the slip' : kind === 'lunchbox' ? 'Looking in the box' : 'Looking at the plate'
+    busy = kind === 'shelf_photo' ? 'Counting the shelf' : kind === 'receipt' ? 'Reading the slip' : kind === 'lunchbox' ? 'Looking in the box' : kind === 'child_plate' ? `Looking at ${CHILD_NAME}'s plate` : 'Looking at the plate'
     try {
       const image = await shrinkImage(file)
-      const result = await parse(kind, { image, location: kind === 'shelf_photo' ? location : undefined, mode: kind === 'lunchbox' ? boxMode : undefined })
+      const result = await parse(kind, { image, location: kind === 'shelf_photo' ? location : undefined, mode: kind === 'lunchbox' || kind === 'child_plate' ? boxMode : undefined })
       proposal = { kind, result }
       void refreshAiUsage()
     } catch (err) {
@@ -51,11 +45,18 @@
 
 <input bind:this={fileInput} type="file" accept="image/*" capture="environment" onchange={onFile} hidden />
 
-<div class="bar">
-  <button class="ghost" onclick={() => start('shelf_photo')} disabled={!!busy}>📷 Shelf</button>
+<p class="eyebrow" style="margin:0 0 6px">House</p>
+<div class="bar three">
+  <button class="ghost" onclick={() => start('shelf_photo')} disabled={!!busy}>📷 Stock take</button>
   <button class="ghost" onclick={() => start('receipt')} disabled={!!busy}>🧾 Till slip</button>
-  <button class="ghost" onclick={() => start('plate')} disabled={!!busy}>🍽 Plate</button>
-  <button class="ghost" onclick={() => start('lunchbox')} disabled={!!busy}>🧃 {CHILD_NAME}'s box</button>
+  <button class="ghost" onclick={() => start('plate')} disabled={!!busy}>🍽 Our plate</button>
+</div>
+<p class="eyebrow" style="margin:10px 0 6px">{CHILD_NAME}</p>
+<div class="bar">
+  <button class="ghost" onclick={() => start('lunchbox', 'packed')} disabled={!!busy}>🧃 Box packed</button>
+  <button class="ghost" onclick={() => start('lunchbox', 'home')} disabled={!!busy}>🏠 Box home</button>
+  <button class="ghost" onclick={() => start('child_plate', 'before')} disabled={!!busy}>🍽 Plate before</button>
+  <button class="ghost" onclick={() => start('child_plate', 'after')} disabled={!!busy}>✨ Plate after</button>
 </div>
 {#if busy}<p class="muted" style="font-size:13px;margin:6px 0 0">{busy}…</p>{/if}
 
@@ -70,21 +71,13 @@
   </div>
 {/if}
 
-{#if askBox}
-  <div class="scrim" onclick={() => (askBox = false)} role="presentation"></div>
-  <div class="sheet" role="dialog" aria-label="Snack box photo">
-    <h2 style="margin-bottom:8px">{CHILD_NAME}'s box</h2>
-    <p class="muted" style="font-size:13.5px">Packing it now fills in today's box. Coming home records what she ate.</p>
-    <div class="row"><button onclick={() => confirmBox('packed')}>Packing it</button><button class="ghost" onclick={() => confirmBox('home')}>It came home</button></div>
-  </div>
-{/if}
-
 {#if proposal}
   <ProposalSheet kind={proposal.kind} result={proposal.result} location={proposal.kind === 'shelf_photo' ? location : null} mode={boxMode} onclose={() => (proposal = null)} />
 {/if}
 
 <style>
   .bar { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .bar.three { grid-template-columns: repeat(3, 1fr); }
   @media (min-width: 480px) { .bar { grid-template-columns: repeat(4, 1fr); } }
   .bar button { padding: 9px 6px; font-size: 13.5px; }
   .scrim { position: fixed; inset: 0; background: rgb(0 0 0 / .35); z-index: 3; }
