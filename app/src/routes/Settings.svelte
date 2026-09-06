@@ -3,6 +3,18 @@
   import { auth, signOut } from '../lib/auth.svelte'
   import { household, leaveDevice, leaveHousehold } from '../lib/household.svelte'
   import { sync, runSync, resetCursors, discardPending } from '../lib/db/sync.svelte'
+  import { stockState } from '../lib/stockState.svelte'
+  import { countDuplicates, mergeDuplicateItems } from '../lib/actions'
+  import { showToast } from '../lib/toast.svelte'
+
+  const duplicates = $derived(countDuplicates(stockState.items, stockState.events))
+  let merging = $state(false)
+  async function merge() {
+    merging = true
+    const n = await mergeDuplicateItems(stockState.items, stockState.events)
+    merging = false
+    showToast(n ? `${n} duplicate${n === 1 ? '' : 's'} merged` : 'No duplicates found')
+  }
 
   async function resync() {
     await resetCursors()
@@ -29,6 +41,14 @@
       {#if household.error}<p style="color:var(--danger)">{household.error}</p>{/if}
     {/if}
   </div>
+
+  {#if duplicates}
+    <div class="card" style="margin-bottom:12px;border-color:var(--ochre)">
+      <p class="eyebrow">Duplicates</p>
+      <p>{duplicates} item{duplicates === 1 ? ' appears' : 's appear'} twice in Stock, usually because both phones loaded the starter catalogue. Merging keeps the copy with history and moves everything else onto it.</p>
+      <button onclick={merge} disabled={merging}>{merging ? 'Merging' : `Merge ${duplicates} duplicate${duplicates === 1 ? '' : 's'}`}</button>
+    </div>
+  {/if}
 
   <div class="card" style="margin-bottom:12px">
     <p class="eyebrow">Sync</p>

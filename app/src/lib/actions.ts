@@ -3,6 +3,8 @@ import { put, newId, nowIso, softDelete } from './db/repo'
 import { household } from './household.svelte'
 import type { Capture, CaptureSource, Idea, Item, ListLine, MealSlot, MealSlotName, Recipe, RecipeIngredient, StockEvent, StockEventType, Trip } from './db/types'
 import { cookedDeductions, addDays } from './domain/plan'
+import { planDedupe, repointEvents, repointIngredients, repointLines, repointSlots } from './domain/dedupe'
+import { db } from './db/schema'
 
 function base() {
   if (!household.id) throw new Error('No household')
@@ -115,4 +117,27 @@ export async function cookSlot(slot: MealSlot, recipe: Recipe | null, ingredient
 
 export async function leftoversTomorrow(slot: MealSlot, title: string, existingTomorrow: MealSlot | undefined): Promise<MealSlot> {
   return upsertSlot(existingTomorrow, addDays(slot.date, 1), 'lunch', { recipe_id: null, item_ids: [], free_text: `Leftover ${title}`, notes: 'leftovers', status: 'planned' })
+}
+
+// ------------------------------------------------------------ duplicates
+
+export function countDuplicates(items: Item[], events: StockEvent[]): number {
+  return planDedupe(items, events).remove.length
+}
+
+// Merge items that share a name: history, list lines, recipes and snack boxes move to the keeper.
+export async function mergeDuplicateItems(items: Item[], events: StockEvent[]): Promise<number> {
+  if (!household.id) return 0
+  const plan = planDedupe(items, events)
+  if (!plan.remove.length) return 0
+  const hid = household.id
+  const lines = await db.list_line.where('household_id').equals(hid).toArray()
+  const ings = await db.recipe_ingredient.where('household_id').equals(hid).toArray()
+  const slots = await db.meal_slot.where('household_id').equals(hid).toArray()
+  for (const e of repointEvents(events, plan.keepers)) await put('stock_event', e)
+  for (const l of repointLines(lines, plan.keepers)) await put('list_line', l)
+  for (const i of repointIngredients(ings, plan.keepers)) await put('recipe_ingredient', i)
+  for (const s of repointSlots(slots, plan.keepers)) await put('meal_slot', s)
+  for (const dup of plan.remove) await put('item', { ...dup, deleted: true })
+  return plan.remove.length
 }

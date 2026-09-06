@@ -54,3 +54,4 @@
 - Rows that can never be accepted (foreign key, policy, check or type violations) no longer block the whole outbox: the chunk is retried one row at a time and the refused rows are set aside with the server's message shown in Settings. Rows belonging to a household this phone has left are dropped up front.
 - Settings gains "Discard N waiting" as a last resort. Local rows stay; only the send queue is cleared.
 - The starter catalogue import waits for a first pull when online, so a second phone cannot seed 124 duplicates before it has seen the first phone's items.
+- **Duplicate items** (both phones seeded the catalogue) are merged in the app, not with SQL: the copy with the most history wins, then the oldest; events, list lines, recipe ingredients and snack boxes are pointed at it; the rest are soft-deleted. Settings shows a Merge button whenever duplicates exist and Stock links to it.
