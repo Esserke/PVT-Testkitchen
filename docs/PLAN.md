@@ -62,7 +62,8 @@ Goal: photos and messages replace typing.
 - [x] `shelf_photo`: camera capture, client-side compression, upload to Storage, extraction → diff against current stock for that location → confirm rows → `count` events; keep the snapshot
 - [x] `receipt`: till-slip photo → `bought` events with prices and shop; unmatched lines offered as new items
 - [x] `recipe_url`: paste a link → draft recipe with ingredients mapped to items
-- [x] `plate`: photograph a plate → draft recipe with ingredients mapped to items
+- [x] `plate`: photograph a plate → draft recipe with ingredients mapped to items, logged as today's meal and deducted
+- [x] `lunchbox`: photograph the snack box when packed (fills today's box) or when home (verdicts per item)
 - [ ] Dictation via the browser speech API feeding the message parser (phones already offer keyboard dictation into the note box)
 - [x] Confidence thresholds and per-path auto-apply setting; everything else lands in the inbox
 - [x] Cost guard: count calls per day; show monthly spend estimate in settings
