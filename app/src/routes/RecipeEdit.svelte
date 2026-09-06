@@ -8,17 +8,27 @@
   import type { Recipe, RecipeIngredient } from '../lib/db/types'
 
   const recipe = $derived(planState.recipes.find((r) => r.id === route.param) ?? null)
-  const saved = $derived(recipe ? (ingredientsByRecipe(planState.ingredients).get(recipe.id) ?? []) : [])
+  const saved = $derived(recipe ? (ingredientsByRecipe(planState.ingredients).get(recipe.id) ?? []).sort((a, b) => a.updated_at.localeCompare(b.updated_at)) : [])
+  const savedKey = $derived(saved.map((i) => i.id).join(','))
 
   let draft = $state<Recipe | null>(null)
   let rows = $state<(RecipeIngredient & { name: string })[]>([])
   let tagText = $state('')
   let loadedFor = $state<string | null>(null)
+  let loadedKey = $state('')
+  let dirty = $state(false)
+  // Load the draft once per recipe, and refresh the ingredient rows if more arrive
+  // (sync or a just-finished import) before the user has started editing.
   $effect(() => {
-    if (recipe && loadedFor !== recipe.id) {
+    if (!recipe) return
+    if (loadedFor !== recipe.id) {
       loadedFor = recipe.id
+      dirty = false
       draft = { ...recipe }
       tagText = recipe.tags.join(', ')
+    }
+    if (!dirty && loadedKey !== savedKey) {
+      loadedKey = savedKey
       rows = saved.map((i) => ({ ...i, name: i.item_id ? stockState.items.find((x) => x.id === i.item_id)?.name ?? '' : i.free_text ?? '' }))
       if (!rows.length) rows = [{ ...blankIngredient(recipe.id), name: '' }]
     }
@@ -26,9 +36,11 @@
   const TAGS = ['quick', 'weeknight', 'batch-cook', 'freezer-friendly', 'kid-favourite', 'braai', 'one-pot', 'leftovers-lunch']
 
   function addRow() {
+    dirty = true
     if (draft) rows = [...rows, { ...blankIngredient(draft.id), name: '' }]
   }
   function removeRow(i: number) {
+    dirty = true
     rows = rows.filter((_, idx) => idx !== i)
   }
   function matchItem(name: string) {
@@ -70,7 +82,7 @@
   {#if !draft}
     <div class="empty">Recipe not found. <button class="ghost" onclick={() => go('recipes')}>Back</button></div>
   {:else}
-    <form class="card" onsubmit={save}>
+    <form class="card" onsubmit={save} oninput={() => (dirty = true)}>
       <div class="field"><label for="t">Name</label><input id="t" bind:value={draft.title} required /></div>
       <div class="row">
         <div class="field" style="flex:1"><label for="sv">Serves</label><input id="sv" type="number" min="1" inputmode="numeric" bind:value={draft.servings} /></div>

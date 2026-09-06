@@ -123,3 +123,6 @@ Body wash / soap,bathroom,bathroom,piece,1,2,count,Checkers,false,true,bought,so
 Pool chlorine,pool & garden,pool shed,kg,5,0,cycle,Checkers,false,false,bought,chlorine|HTH|pool chlorine granules,
 Pool acid,pool & garden,pool shed,litre,5,0,cycle,Checkers,false,false,bought,HCl|pool acid,
 Gas bottle,utilities,garage,piece,1,1,cycle,Other,false,false,bought,LPG|gas|9kg gas,
+Cabbage,fresh,fridge,piece,1,0,count,Everfresh,false,true,bought,sweet cabbage,
+Gravy powder,pantry,pantry,piece,1,1,level,Spar,false,true,bought,gravy|Bisto,
+Pork sausages,fresh,freezer,kg,0.5,0.5,count,Checkers,false,true,bought,bangers|sausages,

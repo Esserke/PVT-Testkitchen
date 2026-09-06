@@ -2,6 +2,19 @@
   import { planState } from '../lib/planState.svelte'
   import { lastCookedByRecipe } from '../lib/domain/plan'
   import { newRecipe, newIdea, saveIdea } from '../lib/actions'
+  import { importStarterRecipes } from '../lib/seedRecipes'
+  import { household } from '../lib/household.svelte'
+  import { STARTER_RECIPES } from '../data/recipes'
+
+  const missingStarters = $derived(STARTER_RECIPES.filter((sr) => !planState.recipes.some((r) => r.title.toLowerCase() === sr.title.toLowerCase())).length)
+  let loadingStarters = $state(false)
+  async function loadStarters() {
+    if (!household.id) return
+    loadingStarters = true
+    const n = await importStarterRecipes(household.id)
+    loadingStarters = false
+    showToast(n ? `${n} recipe${n === 1 ? '' : 's'} added` : 'Already added')
+  }
   import { go } from '../lib/router.svelte'
   import { showToast } from '../lib/toast.svelte'
   import type { Idea } from '../lib/db/types'
@@ -60,8 +73,11 @@
       <input bind:value={q} placeholder="Search or type a new name" aria-label="Search recipes" />
       <button onclick={create}>New</button>
     </div>
+    {#if missingStarters && !q}
+      <p class="muted" style="margin:-4px 0 12px;font-size:13.5px">{missingStarters} starter recipe{missingStarters === 1 ? '' : 's'} ready to add. <button class="ghost" style="padding:4px 8px;font-size:13px" onclick={loadStarters} disabled={loadingStarters}>{loadingStarters ? 'Adding' : 'Add'}</button></p>
+    {/if}
     {#if recipes.length === 0}
-      <div class="empty">{planState.recipes.length ? 'Nothing matches.' : 'No recipes yet. Tap New and add the first favourite.'}</div>
+      <div class="empty">{planState.recipes.length ? 'Nothing matches.' : 'No recipes yet. Tap New and add the first favourite, or add the starter recipes above.'}</div>
     {:else}
       <div class="list">
         {#each recipes as r (r.id)}
