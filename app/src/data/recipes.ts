@@ -40,4 +40,27 @@ export const STARTER_RECIPES: StarterRecipe[] = [
       'Plate the mash, sausages, peas and cabbage. Gravy over the top.',
     ].join('\n'),
   },
+  {
+    title: 'Sunday breakfast: scrambled eggs, hash browns and toast',
+    servings: 2,
+    prep_minutes: 5,
+    cook_minutes: 15,
+    tags: ['breakfast', 'weekend', 'quick'],
+    ingredients: [
+      { name: 'Eggs', quantity: 6, unit: 'piece' },
+      { name: 'Butter', quantity: 40, unit: 'g' },
+      { name: 'Fresh full cream milk', quantity: 50, unit: 'ml' },
+      { name: 'Hash browns', quantity: 8, unit: 'piece' },
+      { name: 'Brown bread', quantity: 0.25, unit: 'piece' },
+      { name: 'Frozen blueberries', quantity: 0.25, unit: 'bag' },
+      { name: 'Table salt', quantity: null, unit: null, optional: true },
+      { name: 'Black pepper', quantity: null, unit: null, optional: true },
+    ],
+    steps: [
+      'Hash browns into the air fryer or oven at 200°C, about 12 minutes, turning once.',
+      'Warm the blueberries in a small pan with a splash of water until they burst and thicken, 5 minutes.',
+      'Whisk the eggs with the milk, salt and pepper. Melt half the butter in a pan over low heat and scramble slowly until just set.',
+      'Toast the bread, butter it, and spoon the blueberries over one slice each.',
+    ].join('\n'),
+  },
 ]
